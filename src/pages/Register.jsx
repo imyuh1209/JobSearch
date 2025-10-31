@@ -1,27 +1,62 @@
 import { Button, Checkbox, Divider, Form, Input, notification, Select } from "antd";
 import { registerUserAPI } from "../services/api.service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
 
 const RegisterPage = () => {
     const [form] = Form.useForm();
     const navigate = useNavigate(); // Hook để điều hướng
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const onFinish = async (values) => {
-        const res = await registerUserAPI(values.name, values.email, values.password,
-            values.gender, values.address, values.age);
-        if (res.data) {
-            notification.success({
-                message: "Register success!",
-                description: "Đăng ký thành công!"
-            });
-            navigate("/"); // Chuyển hướng đến trang Home
-        } else {
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                name: (values.name || "").trim(),
+                email: (values.email || "").trim().toLowerCase(),
+                password: values.password,
+                gender: values.gender,
+                address: (values.address || "").trim(),
+                age: Number(values.age)
+            };
+
+            const res = await registerUserAPI(
+                payload.name,
+                payload.email,
+                payload.password,
+                payload.gender,
+                payload.address,
+                payload.age
+            );
+
+            if (res?.data) {
+                notification.success({
+                    message: "Đăng ký thành công",
+                    description: "Vui lòng đăng nhập để tiếp tục."
+                });
+                navigate("/login");
+            } else {
+                notification.error({
+                    message: "Đăng ký thất bại",
+                    description: res?.message || "Thông tin chưa hợp lệ, vui lòng kiểm tra lại."
+                });
+            }
+        } catch (e) {
             notification.error({
-                message: "Register failed!",
-                description: JSON.stringify(res.message)
-            })
+                message: "Đăng ký thất bại",
+                description: e?.response?.data?.message || e.message || "Có lỗi xảy ra, vui lòng thử lại!"
+            });
+        } finally {
+            setIsSubmitting(false);
         }
-    }
+    };
+
+    const onFinishFailed = () => {
+        notification.warning({
+            message: "Thiếu thông tin",
+            description: "Vui lòng kiểm tra lại các trường bắt buộc."
+        });
+    };
 
     return (
         <div style={{
@@ -48,30 +83,64 @@ const RegisterPage = () => {
                     name="basic"
                     initialValues={{ remember: true }}
                     onFinish={onFinish}
+                    onFinishFailed={onFinishFailed}
                 >
-                    <Form.Item label="Full Name" name="name"
-                        rules={[{ required: true, message: 'Please input your full name!' }]}>
-                        <Input />
+                    <Form.Item label="Họ và tên" name="name"
+                        rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }, { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }]}>
+                        <Input placeholder="Nhập họ và tên" />
                     </Form.Item>
 
                     <Form.Item label="Email" name="email"
-                        rules={[{ required: true, message: 'Please input your email!' }]}>
-                        <Input />
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập email!' },
+                            { type: 'email', message: 'Email không hợp lệ!' }
+                        ]}>
+                        <Input placeholder="Nhập email" />
                     </Form.Item>
 
-                    <Form.Item label="Password" name="password"
-                        rules={[{ required: true, message: 'Please input your password!' }]}>
-                        <Input.Password />
+                    <Form.Item label="Mật khẩu" name="password"
+                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }, { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }]}>
+                        <Input.Password placeholder="Nhập mật khẩu" />
                     </Form.Item>
 
-                    <Form.Item label="Age" name="age"
-                        rules={[{ required: true, message: 'Please input your age!' }]}>
-                        <Input type="number" />
+                    <Form.Item
+                        label="Xác nhận mật khẩu"
+                        name="confirm"
+                        dependencies={["password"]}
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập lại mật khẩu!' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (!value || getFieldValue('password') === value) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input.Password placeholder="Nhập lại mật khẩu" />
+                    </Form.Item>
+
+                    <Form.Item label="Tuổi" name="age"
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập tuổi!' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const n = Number(value);
+                                    if (!Number.isFinite(n)) return Promise.reject('Tuổi phải là số');
+                                    if (n < 16) return Promise.reject('Tuổi tối thiểu là 16');
+                                    if (n > 100) return Promise.reject('Tuổi không hợp lệ');
+                                    return Promise.resolve();
+                                }
+                            })
+                        ]}>
+                        <Input type="number" placeholder="Nhập tuổi" />
                     </Form.Item>
 
                     <Form.Item name="gender" label="Giới tính"
-                        rules={[{ required: true, message: 'Giới tính không được để trống!' }]}>
-                        <Select allowClear>
+                        rules={[{ required: true, message: 'Giới tính không được để trống!' }]}> 
+                        <Select allowClear placeholder="Chọn giới tính">
                             <Select.Option value="MALE">Nam</Select.Option>
                             <Select.Option value="FEMALE">Nữ</Select.Option>
                             <Select.Option value="OTHER">Khác</Select.Option>
@@ -79,20 +148,25 @@ const RegisterPage = () => {
                     </Form.Item>
 
                     <Form.Item label="Địa chỉ" name="address"
-                        rules={[{ required: true, message: 'Địa chỉ không được để trống!' }]}>
-                        <Input />
+                        rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }, { min: 5, message: 'Địa chỉ quá ngắn' }]}>
+                        <Input placeholder="Nhập địa chỉ" />
                     </Form.Item>
 
                     <Form.Item name="remember" valuePropName="checked">
-                        <Checkbox>Remember me</Checkbox>
+                        <Checkbox>Ghi nhớ đăng nhập</Checkbox>
                     </Form.Item>
 
                     <Form.Item>
-                        <Button onClick={() => { form.submit() }} type="primary" style={{ width: "100%" }}>
-                            Submit
+                        <Button type="primary" htmlType="submit" loading={isSubmitting} style={{ width: "100%" }}>
+                            Đăng ký
                         </Button>
                     </Form.Item>
                 </Form>
+                <div style={{ textAlign: "center", marginTop: 8 }}>
+                    <span>
+                        Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+                    </span>
+                </div>
             </div>
         </div>
     );

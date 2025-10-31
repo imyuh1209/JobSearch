@@ -63,6 +63,12 @@ const fetchJobsByCompanyAPI = (companyId) => {
     return axios.get(URL_BACKEND)
 }
 
+// Fetch jobs belonging to the currently authenticated company
+const fetchJobsByCurrentCompanyAPI = () => {
+    const URL_BACKEND = "/api/v1/jobs/by-company";
+    return axios.get(URL_BACKEND);
+}
+
 const callFetchJobById = (id) => {
     const URL_BACKEND = `/api/v1/jobs/${id}`;
     return axios.get(URL_BACKEND)
@@ -125,14 +131,19 @@ const callCreateUser = (data) => {
 
 const callUpdateUser = (id, data) => {
     const URL_BACKEND = "/api/v1/users";
+    // Ép kiểu và chuẩn hóa dữ liệu trước khi gửi
+    const safeId = Number(id);
+    const safeAge = data.age != null ? Number(data.age) : 16;
     const payload = {
-        id: id,
-        name: data.name || "",
+        id: Number.isFinite(safeId) ? safeId : undefined,
+        name: (data.name ?? "").trim(),
         email: data.email || "",
-        age: data.age || 16,
+        age: Number.isFinite(safeAge) && safeAge > 0 ? safeAge : 16,
         gender: data.gender || "MALE",
-        address: data.address || ""
-    }
+        address: data.address || "",
+        // Đảm bảo gửi role theo đúng cấu trúc backend mong đợi
+        ...(data.role?.id ? { role: { id: Number(data.role.id) } } : {})
+    };
     return axios.put(URL_BACKEND, payload);
 }
 
@@ -194,6 +205,13 @@ const callDeleteResume = (id) => {
 const callUpdateResumeStatus = (id, status) => {
     const URL_BACKEND = "/api/v1/resumes";
     return axios.put(URL_BACKEND, { id: id, status: status });
+};
+
+// Send email to applicant when resume status changes
+// Backend is expected to handle email content/template
+const callSendResumeStatusEmail = (resumeId, status) => {
+    const URL_BACKEND = "/api/v1/resumes/status-email";
+    return axios.post(URL_BACKEND, { resumeId, status });
 };
 
 const callFetchResumeById = (id) => {
@@ -293,8 +311,10 @@ const callUpdateSubscriber = (data) => {
 const callSaveJob = (jobId) => axios.post(`/api/v1/saved-jobs?jobId=${jobId}`);
 const callFetchSavedJobs = () => axios.get(`/api/v1/saved-jobs`);
 const callDeleteSavedJobBySavedId = (savedId) => axios.delete(`/api/v1/saved-jobs/${savedId}`);
-// hoặc xoá theo jobId:
-const callUnsaveByJobId = (jobId) => axios.delete(`/api/v1/saved-jobs/${jobId}?byJobId=true`);
+// Xoá theo jobId (ưu tiên):
+const callUnsaveByJobId = (jobId) => axios.delete(`/api/v1/saved-jobs/${jobId}?byJobId=true&jobId=${jobId}`);
+// Kiểm tra trạng thái đã lưu theo jobId
+const callIsSavedJob = (jobId) => axios.get(`/api/v1/saved-jobs/is-saved?jobId=${jobId}`);
 
 
 
@@ -305,9 +325,10 @@ export {
     // Skill APIs
     fetchAllSkillAPI, callCreateSkill, callUpdateSkill, callDeleteSkill, callFetchSkillById,
     // Job APIs
-    callCreateJob, callUpdateJob, callDeleteJob, fetchJobsByCompanyAPI,
+    callCreateJob, callUpdateJob, callDeleteJob, fetchJobsByCompanyAPI, fetchJobsByCurrentCompanyAPI,
     // Resume APIs
     fetchAllResumeAPI, callDeleteResume, callUpdateResumeStatus, callFetchResumeById, callCreateResume, callFetchResumeByUser,
+    callSendResumeStatusEmail,
     // Permission APIs
     fetchAllPermissionAPI, callCreatePermission, callUpdatePermission, callDeletePermission, callFetchPermissionById,
     // Role APIs
@@ -320,5 +341,6 @@ export {
   callSaveJob,
   callFetchSavedJobs,
   callDeleteSavedJobBySavedId,
-  callUnsaveByJobId,
+ callUnsaveByJobId,
+ callIsSavedJob,
 };

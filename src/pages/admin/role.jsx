@@ -28,7 +28,8 @@ const RolePage = () => {
 
     const fetchPermissions = async () => {
         try {
-            const res = await fetchAllPermissionAPI();
+            // Tải tất cả quyền để đảm bảo có Saved Jobs
+            const res = await fetchAllPermissionAPI("page=1&size=1000&sort=updatedAt,desc");
             console.log("Permissions API response:", res);
 
             if (res && res.data) {

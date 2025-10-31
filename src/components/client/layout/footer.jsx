@@ -6,7 +6,7 @@ import {
   PhoneFilled,
   UpOutlined,
 } from "@ant-design/icons";
-import { BackTop, Col, Divider, Row, Space, Typography } from "antd";
+import { FloatButton, Col, Divider, Row, Space, Typography } from "antd";
 
 const { Title, Paragraph, Link: AntLink, Text } = Typography;
 
@@ -110,23 +110,13 @@ const Footer = () => {
       </div>
 
       {/* Back to top */}
-      <BackTop>
-        <div
-          style={{
-            height: 40,
-            width: 40,
-            lineHeight: "40px",
-            borderRadius: 20,
-            backgroundColor: "#1890ff",
-            color: "#fff",
-            textAlign: "center",
-            boxShadow: "0 6px 16px rgba(24,144,255,0.35)",
-          }}
-          aria-label="Back to top"
-        >
-          <UpOutlined />
-        </div>
-      </BackTop>
+      <FloatButton.BackTop
+        icon={<UpOutlined />}
+        type="primary"
+        shape="circle"
+        tooltip="Back to top"
+        style={{ right: 24, bottom: 24 }}
+      />
     </footer>
   );
 };

@@ -33,16 +33,17 @@ const handleRefreshToken = async () => {
 
     isRefreshing = true;
     try {
-        console.log("Starting refresh token process");
-        const res = await instance.get('/api/v1/auth/refresh');
-        console.log("Refresh token response:", res);
-
-        if (res.data && res.data.access_token) {
+        const refreshToken = localStorage.getItem("refresh_token");
+        const res = await instance.get('/api/v1/auth/refresh', {
+            headers: refreshToken ? { 'X-Refresh-Token': refreshToken } : {}
+        });
+        // Endpoint refresh trả kiểu đơn giản: { access_token }
+        if (res?.data && res.data.access_token) {
             localStorage.setItem("access_token", res.data.access_token);
             processQueue(null, res.data.access_token);
             return res.data.access_token;
         }
-        throw new Error("No access token in response");
+        throw new Error("No access token in refresh response");
     } catch (error) {
         console.error("Error refreshing token:", error);
         processQueue(error, null);
@@ -86,6 +87,8 @@ instance.interceptors.response.use(
                 console.error("Failed to refresh token:", refreshError);
                 // Chỉ chuyển hướng về login nếu không phải là request getAccount
                 if (originalRequest.url !== '/api/v1/auth/account') {
+                    localStorage.removeItem("access_token");
+                    localStorage.removeItem("refresh_token");
                     window.location.href = '/login';
                 }
                 return Promise.reject(refreshError);

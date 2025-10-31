@@ -4,10 +4,9 @@ import { Button, Result } from "antd";
 import { Link } from "react-router-dom";
 
 const PrivateRoute = (props) => {
-
     const { user } = useContext(AuthContext);
-    console.log(user);
-    if (user && user.id) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if ((user && user.id) || token) {
         return (
             <>
                 {props.children}

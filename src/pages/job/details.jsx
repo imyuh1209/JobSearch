@@ -24,6 +24,8 @@ import {
   ThunderboltFilled,
 } from "@ant-design/icons";
 import parse from "html-react-parser";
+import DOMPurify from "dompurify";
+import { marked } from "marked";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ApplyModal from "../../components/client/modal/apply.modal";
@@ -31,7 +33,7 @@ import { callFetchJobById } from "../../services/api.service";
 import styles from "../../styles/client.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { HeartOutlined, HeartFilled } from "@ant-design/icons";
-import { callSaveJob, callFetchSavedJobs, callUnsaveByJobId } from "../../services/api.service";
+import { callSaveJob, callUnsaveByJobId, callIsSavedJob } from "../../services/api.service";
 import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth.context";
 dayjs.extend(relativeTime);
@@ -59,21 +61,23 @@ const ClientJobDetailPage = () => {
   const navigate = useNavigate();
 const { user } = useContext(AuthContext);
 const [isSaved, setIsSaved] = useState(false);
+const [saving, setSaving] = useState(false);
   const backend = import.meta.env.VITE_BACKEND_URL;
 
-  useEffect(() => {
   const checkSaved = async () => {
     if (!id) return;
     try {
-      const res = await callFetchSavedJobs();
-      const list = res?.data || [];
-      setIsSaved(list.some((i) => i.jobId === +id));
-    } catch (e) { 
-      console.error("Error fetching saved jobs:", e);
+      const res = await callIsSavedJob(+id);
+      const saved = !!(res?.data && (res.data.saved === true));
+      setIsSaved(saved);
+    } catch (e) {
+      console.error("Error checking saved state:", e);
     }
   };
-  checkSaved();
-}, [id]);
+
+  useEffect(() => {
+    checkSaved();
+  }, [id]);
 
 const toggleSave = async () => {
   if (!user?.id) {
@@ -81,17 +85,20 @@ const toggleSave = async () => {
     return;
   }
   try {
+    setSaving(true);
     if (isSaved) {
-      await callUnsaveByJobId(+id);
-      setIsSaved(false);
-      message.success("Đã bỏ lưu");
+      const res = await callUnsaveByJobId(+id);
+      await checkSaved();
+      message.success(res?.message || "Đã bỏ lưu");
     } else {
-      await callSaveJob(+id);
-      setIsSaved(true);
-      message.success("Đã lưu công việc");
+      const res = await callSaveJob(+id);
+      await checkSaved();
+      message.success(res?.message || "Đã lưu công việc");
     }
   } catch (e) {
-    message.error(e?.response?.data?.message || "Có lỗi xảy ra");
+    message.error(e?.response?.data?.message || e?.response?.data?.error || "Có lỗi xảy ra");
+  } finally {
+    setSaving(false);
   }
 };
   useEffect(() => {
@@ -250,10 +257,18 @@ const toggleSave = async () => {
                 {/* Description */}
                 <Divider />
                 <div style={{ color: "#1f2430" }}>
-                  {/* Nếu mô tả là HTML an toàn từ backend, parse; nếu không, hiển thị plain */}
-                  {jobDetail?.description
-                    ? parse(jobDetail.description)
-                    : <Text type="secondary">Chưa có mô tả cho công việc này.</Text>}
+                  {/* Giữ xuống dòng khi mô tả là text thường; nếu có HTML thì parse */}
+                  {jobDetail?.description ? (
+                    /<\/?[a-z][\s\S]*>/i.test(jobDetail.description)
+                      ? parse(DOMPurify.sanitize(jobDetail.description))
+                      : parse(
+                          DOMPurify.sanitize(
+                            marked.parse(jobDetail.description, { breaks: true, gfm: true })
+                          )
+                        )
+                  ) : (
+                    <Text type="secondary">Chưa có mô tả cho công việc này.</Text>
+                  )}
                 </div>
               </>
             )}
@@ -326,10 +341,12 @@ const toggleSave = async () => {
         jobDetail={jobDetail}
       />
 
-      <Button
+  <Button
   type="text"
   onClick={toggleSave}
   icon={isSaved ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
+  loading={saving}
+  disabled={saving}
 >
   {isSaved ? "Đã lưu" : "Lưu job"}
 </Button>

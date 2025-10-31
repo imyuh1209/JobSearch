@@ -5,6 +5,7 @@ import {
   HomeOutlined,
   LoginOutlined,
   SearchOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import { Input, Menu, notification } from "antd";
 import { useContext, useState } from "react";
@@ -29,6 +30,7 @@ const Header = () => {
       const res = await logoutUserAPI();
       if (res && res.statusCode === 200) {
         localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         setUser({ email: "", name: "", id: "" });
         notification.success({ message: "Đăng xuất thành công!" });
         navigate("/");
@@ -64,6 +66,11 @@ const Header = () => {
             key: "login",
             icon: <LoginOutlined />,
           },
+          {
+            label: <Link to={"/register"}>Đăng ký</Link>,
+            key: "register",
+            icon: <UserAddOutlined />,
+          },
         ]
       : [
           {
@@ -72,21 +79,20 @@ const Header = () => {
             icon: <AliwangwangOutlined />,
             children: [
               {
-                label: (
-                  <label
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setOpenManageAccount(true)}
-                  >
-                    Quản lý tài khoản
-                  </label>
-                ),
+                label: <NavLink to="/account">Quản lý tài khoản</NavLink>,
               },
-              {
-                label: <NavLink to="/admin">Trang quản trị</NavLink>,
-              },
-              {
-                label: <NavLink to="/saved-jobs">Công việc đã lưu</NavLink>,
-              },
+              // Chỉ hiển thị Trang quản trị khi không phải tài khoản USER
+              ...((user?.role?.name === 'SUPER_ADMIN' || user?.role?.name === 'Công ty' || user?.role?.name === 'Company')
+                ? [{ label: <NavLink to="/admin">Trang quản trị</NavLink> }]
+                : []),
+              // Trang quản lý CV: chuyển hướng vào trang admin/resume
+              ...((user?.role?.name === 'Công ty' || user?.role?.name === 'Company' || user?.role?.name === 'SUPER_ADMIN')
+                ? [{ label: <NavLink to="/admin/resume">Quản lý CV ứng tuyển</NavLink> }]
+                : []),
+              
+                              ...((user?.role?.name === 'User')
+                ? [{ label: <NavLink to="/saved-jobs">Công việc đã lưu</NavLink> }]
+                : []),
               {
                 label: <span onClick={handleLogout}>Đăng xuất</span>,
                 key: "logout",

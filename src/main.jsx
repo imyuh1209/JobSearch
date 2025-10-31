@@ -23,6 +23,7 @@ import ResumePage from './pages/admin/resume.jsx';
 import PermissionPage from './pages/admin/permission.jsx';
 import RolePage from './pages/admin/role.jsx';
 import SavedJobsPage from "./pages/job/saved.jobs";
+import AccountPage from './pages/account/index.jsx';
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,11 @@ const router = createBrowserRouter([
       { path: '/company', element: <CompanyPage /> },
       { path: '/company/:id', element: <ClientCompanyDetailPage /> },
       { path: "/saved-jobs", element: <SavedJobsPage /> }
+      ,{ path: '/account', element: (
+        <PrivateRoute>
+          <AccountPage />
+        </PrivateRoute>
+      ) }
     ],
   },
 

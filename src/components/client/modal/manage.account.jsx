@@ -1,13 +1,12 @@
-import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification } from 'antd';
+import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification, Input, InputNumber } from 'antd';
 import { isMobile } from 'react-device-detect';
 import { useEffect, useState, useContext } from 'react';
-import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber } from '../../../services/api.service';
+import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount } from '../../../services/api.service';
 import dayjs from 'dayjs';
 import { MonitorOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../context/auth.context";
 
-
-const UserResume = () => {
+export const UserResume = () => {
     const [listCV, setListCV] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -85,7 +84,7 @@ const UserResume = () => {
 
 
 // Job by email
-const JobByEmail = () => {
+export const JobByEmail = () => {
     const [form] = Form.useForm();
     const [optionsSkills, setOptionsSkills] = useState([]);
     const [subscriber, setSubscriber] = useState(null);
@@ -216,12 +215,116 @@ const JobByEmail = () => {
     )
 }
 
-const UserUpdateInfo = () => {
+export const UserUpdateInfo = () => {
+    const [form] = Form.useForm();
+    const { user, setUser } = useContext(AuthContext);
+
+    useEffect(() => {
+        if (user && user.id) {
+            form.setFieldsValue({
+                name: user.name || "",
+                email: user.email || "",
+                age: user.age || undefined,
+                gender: user.gender || undefined,
+                address: user.address || "",
+            });
+        }
+    }, [user]);
+
+    const onFinish = async (values) => {
+        try {
+            // Chuẩn hóa dữ liệu trước khi gửi
+            const uid = Number(user?.id);
+            const payload = {
+                name: (values.name ?? "").trim(),
+                email: user?.email || values.email || "",
+                age: Number(values.age),
+                gender: values.gender,
+                address: values.address ?? "",
+            };
+
+            const res = await callUpdateUser(uid, payload);
+            if (res?.data) {
+                message.success("Cập nhật thông tin thành công");
+
+                // Cập nhật tạm thời context để tránh mất trạng thái (đặc biệt là id)
+                setUser((prev) => ({
+                    ...prev,
+                    ...payload,
+                    id: prev?.id, // đảm bảo giữ id hiện tại để không bị PrivateRoute chặn
+                }));
+
+                // Sau đó gọi getAccount để đồng bộ dữ liệu mới nhất từ server (nếu có)
+                try {
+                    const acc = await getAccount();
+                    if (acc?.data?.user && acc?.data?.user?.id) {
+                        setUser(acc.data.user);
+                        // Đồng bộ lại form theo dữ liệu mới
+                        form.setFieldsValue({
+                            name: acc.data.user.name || "",
+                            email: acc.data.user.email || "",
+                            age: acc.data.user.age ?? undefined,
+                            gender: acc.data.user.gender ?? undefined,
+                            address: acc.data.user.address || "",
+                        });
+                    }
+                } catch (err) {
+                    // Bỏ qua nếu getAccount lỗi, đã có dữ liệu tạm thời từ payload
+                }
+            } else {
+                notification.error({
+                    message: "Có lỗi xảy ra",
+                    description: res?.message || "Vui lòng thử lại",
+                });
+            }
+        } catch (e) {
+            notification.error({
+                message: "Lỗi",
+                description: e?.response?.data?.message || e.message || "Không thể cập nhật",
+            });
+        }
+    };
+
     return (
-        <div>
-            //todo
-        </div>
-    )
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+            <Row gutter={[16, 16]}>
+                <Col xs={24} md={12}>
+                    <Form.Item label="Tên hiển thị" name="name" rules={[{ required: true, message: "Vui lòng nhập tên" }]}> 
+                        <Input placeholder="Nhập tên" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Form.Item label="Email" name="email" rules={[{ required: true }]}> 
+                        <Input disabled />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Form.Item label="Tuổi" name="age" rules={[{ required: true, message: "Vui lòng nhập tuổi" }]}> 
+                        <InputNumber min={1} style={{ width: '100%' }} />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Form.Item label="Giới tính" name="gender" rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}> 
+                        <Select
+                            options={[
+                                { label: 'Nam', value: 'MALE' },
+                                { label: 'Nữ', value: 'FEMALE' },
+                                { label: 'Khác', value: 'OTHER' },
+                            ]}
+                        />
+                    </Form.Item>
+                </Col>
+                <Col span={24}>
+                    <Form.Item label="Địa chỉ" name="address"> 
+                        <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={24}>
+                    <Button type="primary" onClick={() => form.submit()}>Cập nhật</Button>
+                </Col>
+            </Row>
+        </Form>
+    );
 }
 
 const ManageAccount = (props) => {

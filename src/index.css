@@ -86,3 +86,28 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Highlight văn bản xám dịu mắt */
+::selection {
+  background: #e5e7eb; /* gray-200 */
+  color: #111827;      /* gray-900 */
+}
+
+/* Khung chọn (input/select) hover/focus với màu nhấn xanh nhẹ */
+.ant-input:hover,
+.ant-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+.ant-select-focused .ant-select-selector,
+.ant-select-selector:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+/* Card hover nhẹ, nền xám rất nhạt để dễ nhìn */
+.ant-card:hover {
+  background: #f7f9fc;
+  box-shadow: 0 6px 20px rgba(17, 24, 39, 0.06);
+}

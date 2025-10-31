@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Button, Descriptions, Drawer, Form, Select, message, notification, Space } from "antd";
 import dayjs from 'dayjs';
-import { callUpdateResumeStatus } from "../../../services/api.service";
+import { callUpdateResumeStatus, callSendResumeStatusEmail } from "../../../services/api.service";
 
 const { Option } = Select;
 
@@ -17,6 +17,17 @@ const ViewDetailResume = (props) => {
             const res = await callUpdateResumeStatus(dataInit?.id, status);
             if (res && res.data) {
                 message.success("Cập nhật trạng thái thành công!");
+                // Try to send email notification to applicant
+                try {
+                    const mail = await callSendResumeStatusEmail(dataInit?.id, status);
+                    if (mail?.data) {
+                        message.success("Đã gửi email thông báo tới ứng viên.");
+                    } else {
+                        message.warning("Cập nhật xong nhưng gửi email thất bại.");
+                    }
+                } catch (mailErr) {
+                    message.warning("Cập nhật xong nhưng gửi email thất bại.");
+                }
                 setDataInit(null);
                 onClose(false);
                 reloadTable();
@@ -102,4 +113,4 @@ const ViewDetailResume = (props) => {
     );
 };
 
-export default ViewDetailResume; 
+export default ViewDetailResume;

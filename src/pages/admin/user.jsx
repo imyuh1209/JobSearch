@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Table, Space, Popconfirm, message, Button, Input, Form, Tag } from "antd";
+import { Table, Space, Popconfirm, message, Button, Input, Form, Tag, Modal } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
-import { fetchAllUserAPI, deleteUserAPI } from "../../services/api.service";
+import { fetchAllUserAPI, deleteUserAPI, fetchAllResumeAPI, callDeleteResume } from "../../services/api.service";
 import ModalUser from "../../components/admin/user/modal.user";
 import ViewDetailUser from "../../components/admin/user/view.detail.user";
 import dayjs from 'dayjs';
@@ -96,15 +96,67 @@ const UserTable = () => {
     };
 
     const handleDeleteUser = async (id) => {
-        if (id) {
+        if (!id) return;
+        try {
             const res = await deleteUserAPI(id);
-            console.log(res);
-            if (res.statusCode === 200) {
-                message.success("Xóa người dùng thành công");
-                FetchAllUsers(meta.page, meta.pageSize);
-            } else {
-                message.error("Có lỗi xảy ra khi xóa người dùng");
+            if (res?.statusCode === 200) {
+                message.success(res?.message || "Xóa người dùng thành công");
+                FetchAllUsers(meta.page, meta.pageSize, filters);
+                return;
             }
+            message.error(res?.error || res?.message || "Có lỗi xảy ra khi xóa người dùng");
+        } catch (error) {
+            const errMsg = error?.response?.data?.message || error?.response?.data?.error || "Có lỗi xảy ra khi xóa người dùng";
+            // Nếu lỗi do ràng buộc khóa ngoại với bảng resumes, đề xuất xoá resume
+            const isResumeConstraint = typeof errMsg === 'string' && errMsg.includes('resumes') && errMsg.includes('foreign key');
+            if (isResumeConstraint) {
+                Modal.confirm({
+                    title: "Không thể xóa người dùng vì còn Resume liên quan",
+                    content: "Hệ thống phát hiện người dùng này có Resume. Bạn có muốn xoá toàn bộ Resume của người dùng này rồi tiếp tục xoá?",
+                    okText: "Xóa Resume và tiếp tục",
+                    cancelText: "Hủy",
+                    onOk: async () => {
+                        await handleCascadeDeleteUser(id);
+                    }
+                });
+            } else {
+                message.error(errMsg);
+            }
+        }
+    };
+
+    const handleCascadeDeleteUser = async (userId) => {
+        try {
+            // Lấy tất cả resume của user, kích thước lớn để gom xóa một lượt
+            const query = `filter=user.id == '${userId}'&page=1&size=1000`;
+            const res = await fetchAllResumeAPI(query);
+            const resumes = res?.data?.result || [];
+            if (resumes.length === 0) {
+                // Không có resume, thử xóa lại user
+                const del = await deleteUserAPI(userId);
+                if (del?.statusCode === 200) {
+                    message.success("Đã xóa người dùng sau khi kiểm tra phụ thuộc");
+                    FetchAllUsers(meta.page, meta.pageSize, filters);
+                } else {
+                    message.error(del?.message || "Xóa người dùng thất bại");
+                }
+                return;
+            }
+
+            // Xóa tất cả resume liên quan
+            await Promise.allSettled(resumes.map(r => callDeleteResume(r.id)));
+
+            // Thử xóa lại user sau khi đã xóa resume
+            const del2 = await deleteUserAPI(userId);
+            if (del2?.statusCode === 200) {
+                message.success("Đã xóa Resume liên quan và xóa người dùng thành công");
+                FetchAllUsers(meta.page, meta.pageSize, filters);
+            } else {
+                message.error(del2?.message || "Xóa người dùng thất bại sau khi xóa Resume");
+            }
+        } catch (e) {
+            const err = e?.response?.data?.message || e.message || "Có lỗi khi xóa dữ liệu phụ thuộc";
+            message.error(err);
         }
     };
 

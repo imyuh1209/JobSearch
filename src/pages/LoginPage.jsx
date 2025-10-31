@@ -1,33 +1,77 @@
 import { Button, Checkbox, Divider, Form, Input, notification, Select } from "antd";
 import { loginUserAPI } from '../services/api.service';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '@ant-design/v5-patch-for-react-19';
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../components/context/auth.context";
 const LoginPage = () => {
 
     const [form] = Form.useForm();
     const navigate = useNavigate(); // Hook để điều hướng
     const { setUser } = useContext(AuthContext);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const validateUsernameOrEmail = (_, value) => {
+        const trimmed = (value || "").trim();
+        if (!trimmed) return Promise.reject('Vui lòng nhập email hoặc tên đăng nhập!');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(trimmed) || trimmed.length >= 3) return Promise.resolve();
+        return Promise.reject('Email không hợp lệ hoặc tên đăng nhập quá ngắn!');
+    };
 
     const onFinish = async (values) => {
+        try {
+            setIsSubmitting(true);
+            const res = await loginUserAPI(values.username, values.password);
+            if (res?.data) {
+                notification.success({
+                    message: "Đăng nhập thành công",
+                    description: "Chào mừng bạn quay lại!"
+                });
+                localStorage.setItem("access_token", res.data.access_token);
+                if (res.data.refresh_token) {
+                    localStorage.setItem("refresh_token", res.data.refresh_token);
+                }
+                setUser(res.data.user);
+                navigate("/");
+            } else {
+                notification.error({
+                    message: "Đăng nhập thất bại",
+                    description: res?.message || "Sai email hoặc mật khẩu."
+                });
+            }
+        } catch (e) {
+            const status = e?.response?.status ?? e?.response?.data?.statusCode;
+            const rawMsg = e?.response?.data?.message || e?.message || "";
+            let description = "Có lỗi xảy ra, vui lòng thử lại!";
 
-        const res = await loginUserAPI(values.username, values.password);
-        if (res.data) {
-            notification.success({
-                message: "Login success!",
-                description: "Đăng nhập thành công!"
-            })
-            localStorage.setItem("access_token", res.data.access_token);
-            setUser(res.data.user);
-            navigate("/"); // Chuyển hướng đến trang Home
-        } else {
+            if (status === 401) {
+                description = "Sai email hoặc mật khẩu!";
+            } else if (typeof rawMsg === 'string' && /bad credentials|unauthorized|invalid username|invalid password/i.test(rawMsg)) {
+                description = "Sai email hoặc mật khẩu!";
+            } else if (typeof rawMsg === 'string' && /IdInvalidException/i.test(rawMsg)) {
+                description = "Sai email hoặc mật khẩu!";
+            } else if (status === 400) {
+                description = "Thông tin đăng nhập chưa hợp lệ, vui lòng kiểm tra lại.";
+            } else if (status >= 500) {
+                description = "Máy chủ gặp sự cố, vui lòng thử lại sau.";
+            }
+
             notification.error({
-                message: "Login failed!",
-                description: res.error
-            })
+                message: "Đăng nhập thất bại",
+                description
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     }
+
+    const onFinishFailed = () => {
+        notification.warning({
+            message: "Thiếu thông tin",
+            description: "Vui lòng kiểm tra lại email/tên đăng nhập và mật khẩu."
+        });
+    };
 
     return (
         <div style={{
@@ -56,31 +100,33 @@ const LoginPage = () => {
                     onFinish={onFinish}
                 >
                     <Form.Item
-                        label="User Name"
+                        label="Email hoặc tên đăng nhập"
                         name="username"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập email!' }, // Kiểm tra bắt buộc nhập
-                            { type: 'email', message: 'Email không hợp lệ!' } // Kiểm tra đúng định dạng email
-                        ]}
+                        rules={[{ validator: validateUsernameOrEmail }]}
                     >
-                        <Input placeholder="Nhập email của bạn" />
+                        <Input placeholder="Nhập email hoặc tên đăng nhập" />
                     </Form.Item>
 
-                    <Form.Item label="Password" name="password"
-                        rules={[{ required: true, message: 'Please input your password!' }]}>
-                        <Input.Password />
+                    <Form.Item label="Mật khẩu" name="password"
+                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}>
+                        <Input.Password placeholder="Nhập mật khẩu" />
                     </Form.Item>
 
                     <Form.Item name="remember" valuePropName="checked">
-                        <Checkbox>Remember me</Checkbox>
+                        <Checkbox>Ghi nhớ đăng nhập</Checkbox>
                     </Form.Item>
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
-                            Submit
+                        <Button type="primary" htmlType="submit" style={{ width: "100%" }} loading={isSubmitting}>
+                            Đăng nhập
                         </Button>
                     </Form.Item>
                 </Form>
+                <div style={{ textAlign: "center", marginTop: 8 }}>
+                    <span>
+                        Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+                    </span>
+                </div>
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 import { Card, Col, Collapse, Row, Tooltip } from 'antd';
 import { ProFormSwitch } from '@ant-design/pro-components';
 import { grey } from '@ant-design/colors';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { colorMethod, groupByPermission } from '../../../config/utils';
 import '../../../styles/reset.scss';
 
@@ -10,30 +10,35 @@ const { Panel } = Collapse;
 const ModuleApi = (props) => {
     const { form, listPermissions, singleRole, openModal } = props;
 
+    // Gộp quyền Saved Jobs vào nhóm Jobs để hiển thị trong Role modal
+    const mergedListPermissions = useMemo(() => {
+        if (!Array.isArray(listPermissions)) return [];
+        const jobIndex = listPermissions.findIndex(g => g.module === 'JOB');
+        const savedIndex = listPermissions.findIndex(g => g.module === 'SAVED_JOB');
+        if (jobIndex === -1) return listPermissions.filter(g => g.module !== 'SAVED_JOB');
+        const jobGroup = listPermissions[jobIndex] || { module: 'JOB', permissions: [] };
+        const savedGroup = savedIndex !== -1 ? listPermissions[savedIndex] : null;
+        const mergedJobGroup = savedGroup
+            ? { ...jobGroup, permissions: [ ...(jobGroup.permissions || []), ...(savedGroup.permissions || []) ] }
+            : jobGroup;
+        return listPermissions
+            .map((g, idx) => (idx === jobIndex ? mergedJobGroup : g))
+            .filter(g => g.module !== 'SAVED_JOB');
+    }, [listPermissions]);
+
     useEffect(() => {
-        if (listPermissions?.length && singleRole?.id && openModal === true) {
-            // Current permissions of role
-            const userPermissions = groupByPermission(singleRole.permissions);
+        if (mergedListPermissions?.length && singleRole?.id && openModal === true) {
+            // Map các quyền hiện có theo id để set mặc định theo id, không phụ thuộc module
+            const grantedIds = new Set((singleRole?.permissions || []).map(p => p.id));
 
             let p = {};
 
-            listPermissions.forEach(x => {
-                let allCheck = true;
-                x.permissions?.forEach(y => {
-                    const temp = userPermissions.find(z => z.module === x.module);
-
-                    p[y.id] = false;
-
-                    if (temp) {
-                        const isExist = temp.permissions.find(k => k.id === y.id);
-                        if (isExist) {
-                            p[y.id] = true;
-                        } else allCheck = false;
-                    } else {
-                        allCheck = false;
-                    }
+            mergedListPermissions.forEach(x => {
+                const children = x.permissions || [];
+                children.forEach(y => {
+                    p[y.id] = grantedIds.has(y.id);
                 });
-
+                const allCheck = children.length > 0 ? children.every(it => grantedIds.has(it.id)) : false;
                 p[x.module] = allCheck;
             });
 
@@ -44,10 +49,10 @@ const ModuleApi = (props) => {
                 permissions: p
             });
         }
-    }, [openModal, singleRole, listPermissions, form]);
+    }, [openModal, singleRole, mergedListPermissions, form]);
 
     const handleSwitchAll = (value, name) => {
-        const child = listPermissions?.find(item => item.module === name);
+        const child = mergedListPermissions?.find(item => item.module === name);
         if (child) {
             child?.permissions?.forEach(item => {
                 if (item.id)
@@ -60,7 +65,7 @@ const ModuleApi = (props) => {
         form.setFieldValue(["permissions", child], value);
 
         // Check all
-        const temp = listPermissions?.find(item => item.module === parent);
+        const temp = mergedListPermissions?.find(item => item.module === parent);
         if (temp?.module) {
             const restPermission = temp?.permissions?.filter(item => item.id !== child);
             if (restPermission && restPermission.length) {
@@ -71,9 +76,9 @@ const ModuleApi = (props) => {
     };
 
     return (
-        <Card size="small" bordered={false}>
+        <Card size="small" variant="borderless">
             <Collapse>
-                {listPermissions?.map((item, index) => (
+                {mergedListPermissions?.map((item, index) => (
                     <Panel
                         header={<div>{item.module}</div>}
                         key={`${index}-parent`}

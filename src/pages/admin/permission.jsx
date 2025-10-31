@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Space, Popconfirm, message, Button, Input, Form, Select, Tag } from "antd";
+import { Table, Space, Popconfirm, message, Button, Input, Form, Select, Tag, notification } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { fetchAllPermissionAPI, callDeletePermission } from "../../services/api.service";
 import ModalPermission from "../../components/admin/permission/modal.permission";
@@ -98,6 +98,116 @@ const PermissionPage = () => {
             } else {
                 message.error("Có lỗi xảy ra khi xóa Permission");
             }
+        }
+    };
+
+    // Seed default permissions
+    const getAllPermissionsRaw = async () => {
+        try {
+            const res = await fetchAllPermissionAPI("page=1&size=1000&sort=updatedAt,desc");
+            let permissionsData = [];
+            if (res && res.data) {
+                if (res.data.result && Array.isArray(res.data.result)) permissionsData = res.data.result;
+                else if (res.data.result && res.data.result.content && Array.isArray(res.data.result.content)) permissionsData = res.data.result.content;
+                else if (res.data.content && Array.isArray(res.data.content)) permissionsData = res.data.content;
+                else if (Array.isArray(res.data)) permissionsData = res.data;
+            }
+            return permissionsData;
+        } catch (e) {
+            console.error("Error getAllPermissionsRaw:", e);
+            return [];
+        }
+    };
+
+    const buildDefaultPermissions = () => {
+        return [
+            // Companies
+            { name: 'Create a company', apiPath: '/api/v1/companies', method: 'POST', module: 'COMPANY' },
+            { name: 'Get companies with pagination', apiPath: '/api/v1/companies', method: 'GET', module: 'COMPANY' },
+            { name: 'Get a company by id', apiPath: '/api/v1/companies/{id}', method: 'GET', module: 'COMPANY' },
+            { name: 'Update a company', apiPath: '/api/v1/companies', method: 'PUT', module: 'COMPANY' },
+            { name: 'Delete a company', apiPath: '/api/v1/companies/{id}', method: 'DELETE', module: 'COMPANY' },
+            { name: 'Get jobs by company', apiPath: '/api/v1/companies/jobs/{id}', method: 'GET', module: 'COMPANY' },
+            // Jobs
+            { name: 'Create a job', apiPath: '/api/v1/jobs', method: 'POST', module: 'JOB' },
+            { name: 'Get jobs with pagination', apiPath: '/api/v1/jobs', method: 'GET', module: 'JOB' },
+            { name: 'Get a job by id', apiPath: '/api/v1/jobs/{id}', method: 'GET', module: 'JOB' },
+            { name: 'Update a job', apiPath: '/api/v1/jobs', method: 'PUT', module: 'JOB' },
+            { name: 'Delete a job', apiPath: '/api/v1/jobs/{id}', method: 'DELETE', module: 'JOB' },
+            { name: 'Get jobs by current company', apiPath: '/api/v1/jobs/by-company', method: 'GET', module: 'JOB' },
+            { name: 'Get jobs with applicant count', apiPath: '/api/v1/jobs-with-applicants', method: 'GET', module: 'JOB' },
+            // Saved Jobs
+            { name: 'Save a job', apiPath: '/api/v1/saved-jobs', method: 'POST', module: 'SAVED_JOB' },
+            { name: 'List my saved jobs', apiPath: '/api/v1/saved-jobs', method: 'GET', module: 'SAVED_JOB' },
+            { name: 'Delete a saved job by id', apiPath: '/api/v1/saved-jobs/{id}', method: 'DELETE', module: 'SAVED_JOB' },
+            { name: 'Check job saved status', apiPath: '/api/v1/saved-jobs/is-saved', method: 'GET', module: 'SAVED_JOB' },
+            // Resumes
+            { name: 'Create a resume', apiPath: '/api/v1/resumes', method: 'POST', module: 'RESUME' },
+            { name: 'Get resumes with pagination', apiPath: '/api/v1/resumes', method: 'GET', module: 'RESUME' },
+            { name: 'Get a resume by id', apiPath: '/api/v1/resumes/{id}', method: 'GET', module: 'RESUME' },
+            { name: 'Update a resume', apiPath: '/api/v1/resumes', method: 'PUT', module: 'RESUME' },
+            { name: 'Delete a resume', apiPath: '/api/v1/resumes/{id}', method: 'DELETE', module: 'RESUME' },
+            { name: 'Get my resumes', apiPath: '/api/v1/resumes/by-user', method: 'POST', module: 'RESUME' },
+            { name: 'Count resumes by job', apiPath: '/api/v1/resumes/count-by-job/{jobId}', method: 'GET', module: 'RESUME' },
+            // Users
+            { name: 'Create a user', apiPath: '/api/v1/users', method: 'POST', module: 'USER' },
+            { name: 'Update a user', apiPath: '/api/v1/users', method: 'PUT', module: 'USER' },
+            { name: 'Delete a user', apiPath: '/api/v1/users/{id}', method: 'DELETE', module: 'USER' },
+            { name: 'Get a user by id', apiPath: '/api/v1/users/{id}', method: 'GET', module: 'USER' },
+            { name: 'Get users with pagination', apiPath: '/api/v1/users', method: 'GET', module: 'USER' },
+            // Roles
+            { name: 'Create a role', apiPath: '/api/v1/roles', method: 'POST', module: 'ROLE' },
+            { name: 'Update a role', apiPath: '/api/v1/roles', method: 'PUT', module: 'ROLE' },
+            { name: 'Delete a role', apiPath: '/api/v1/roles/{id}', method: 'DELETE', module: 'ROLE' },
+            { name: 'Get a role by id', apiPath: '/api/v1/roles/{id}', method: 'GET', module: 'ROLE' },
+            { name: 'Get roles with pagination', apiPath: '/api/v1/roles', method: 'GET', module: 'ROLE' },
+            // Permissions
+            { name: 'Create a permission', apiPath: '/api/v1/permissions', method: 'POST', module: 'PERMISSION' },
+            { name: 'Update a permission', apiPath: '/api/v1/permissions', method: 'PUT', module: 'PERMISSION' },
+            { name: 'Delete a permission', apiPath: '/api/v1/permissions/{id}', method: 'DELETE', module: 'PERMISSION' },
+            { name: 'Get a permission by id', apiPath: '/api/v1/permissions/{id}', method: 'GET', module: 'PERMISSION' },
+            { name: 'Get permissions with pagination', apiPath: '/api/v1/permissions', method: 'GET', module: 'PERMISSION' },
+            // Skills
+            { name: 'Add a skill', apiPath: '/api/v1/skills', method: 'POST', module: 'SKILL' },
+            { name: 'Get skills with pagination', apiPath: '/api/v1/skills', method: 'GET', module: 'SKILL' },
+            { name: 'Get a skill by id', apiPath: '/api/v1/skills/{id}', method: 'GET', module: 'SKILL' },
+            { name: 'Update a skill', apiPath: '/api/v1/skills', method: 'PUT', module: 'SKILL' },
+            { name: 'Delete a skill', apiPath: '/api/v1/skills/{id}', method: 'DELETE', module: 'SKILL' },
+            // Subscribers
+            { name: 'Create a subscriber', apiPath: '/api/v1/subscribers', method: 'POST', module: 'SUBSCRIBER' },
+            { name: 'Update a subscriber', apiPath: '/api/v1/subscribers', method: 'PUT', module: 'SUBSCRIBER' },
+            { name: "Get subscriber's skill", apiPath: '/api/v1/subscribers/skills', method: 'GET', module: 'SUBSCRIBER' },
+            // Auth
+            { name: 'Register', apiPath: '/api/v1/auth/register', method: 'POST', module: 'AUTH' },
+            { name: 'Login', apiPath: '/api/v1/auth/login', method: 'POST', module: 'AUTH' },
+            { name: 'Get current account', apiPath: '/api/v1/auth/account', method: 'GET', module: 'AUTH' },
+            { name: 'Refresh token (cookie/header)', apiPath: '/api/v1/auth/refresh', method: 'GET', module: 'AUTH' },
+            { name: 'Refresh token (body)', apiPath: '/api/v1/auth/refresh', method: 'POST', module: 'AUTH' },
+            { name: 'Logout', apiPath: '/api/v1/auth/logout', method: 'POST', module: 'AUTH' },
+        ];
+    };
+
+    const seedDefaultPermissions = async () => {
+        try {
+            const existing = await getAllPermissionsRaw();
+            const defaults = buildDefaultPermissions();
+            const toCreate = defaults.filter(p => !existing.some(e => e.apiPath === p.apiPath && e.method === p.method && e.module === p.module));
+
+            if (!toCreate.length) {
+                message.info('Tất cả quyền mặc định đã tồn tại.');
+                return;
+            }
+
+            notification.info({ message: 'Đang tạo quyền mặc định', description: `Số lượng: ${toCreate.length}` });
+            const results = await Promise.allSettled(toCreate.map(p => callCreatePermission(p)));
+            const successCount = results.filter(r => r.status === 'fulfilled' && r.value && r.value.data).length;
+            const failCount = toCreate.length - successCount;
+            if (successCount) message.success(`Tạo thành công ${successCount} quyền.`);
+            if (failCount) message.warning(`${failCount} quyền tạo thất bại hoặc trùng.`);
+            FetchAllPermissions(meta.page, meta.pageSize);
+        } catch (error) {
+            console.error('Seed default permissions error:', error);
+            notification.error({ message: 'Lỗi seed quyền mặc định', description: error?.message || 'Vui lòng thử lại.' });
         }
     };
 
@@ -247,6 +357,9 @@ const PermissionPage = () => {
                 style={{ marginBottom: 16 }}
             >
                 Thêm mới
+            </Button>
+            <Button onClick={seedDefaultPermissions} style={{ marginLeft: 8, marginBottom: 16 }}>
+                Thêm quyền mặc định
             </Button>
 
             <Table

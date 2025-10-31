@@ -117,6 +117,7 @@ const LayoutAdmin = () => {
         const res = await logoutUserAPI();
         if (res && +res.statusCode === 200) {
             localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
             setUser({
                 email: "",
                 name: "",

@@ -18,7 +18,10 @@ const ModalRole = (props) => {
             for (const key in permissions) {
                 // Chỉ lấy các permission là ID (số) và có giá trị là true
                 if (key.match(/^[0-9]+$/) && permissions[key] === true) {
-                    checkedPermissions.push({ id: key });
+                    const pid = Number(key);
+                    if (!Number.isNaN(pid)) {
+                        checkedPermissions.push({ id: pid });
+                    }
                 }
             }
         }

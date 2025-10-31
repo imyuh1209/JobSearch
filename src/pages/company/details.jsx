@@ -19,6 +19,8 @@ import {
   ApartmentOutlined,
 } from "@ant-design/icons";
 import parse from "html-react-parser";
+import DOMPurify from "dompurify";
+import { marked } from "marked";
 import {
   callFetchCompanyById,
   fetchJobsByCompanyAPI,
@@ -79,10 +81,11 @@ const ClientCompanyDetailPage = () => {
 
   const gotoJobDetail = (job) => navigate(`/job/${job.id}`);
 
+
   return (
     <div className="company-detail-container">
       {/* ===== HERO ===== */}
-      <Card className="company-hero" bordered={false}>
+            <Card className="company-hero" variant="borderless">
         {isLoading ? (
           <Skeleton active avatar paragraph={{ rows: 2 }} />
         ) : companyDetail ? (
@@ -123,7 +126,7 @@ const ClientCompanyDetailPage = () => {
       </Card>
 
       {/* ===== DESCRIPTION ===== */}
-      <Card className="company-desc" bordered={false}>
+            <Card className="company-desc" variant="borderless">
         {isLoading ? (
           <Skeleton paragraph={{ rows: 6 }} active />
         ) : (
@@ -133,7 +136,17 @@ const ClientCompanyDetailPage = () => {
             </Title>
             <Divider className="section-divider" />
             <div className="company-desc__content">
-              {parse(companyDetail?.description || "<p>Đang cập nhật...</p>")}
+              {companyDetail?.description ? (
+                /<\/?[a-z][\s\S]*>/i.test(companyDetail.description)
+                  ? parse(DOMPurify.sanitize(companyDetail.description))
+                  : parse(
+                      DOMPurify.sanitize(
+                        marked.parse(companyDetail.description, { breaks: true, gfm: true })
+                      )
+                    )
+              ) : (
+                <Text type="secondary">Đang cập nhật...</Text>
+              )}
             </div>
           </>
         )}

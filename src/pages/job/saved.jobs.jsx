@@ -15,7 +15,8 @@ export default function SavedJobsPage() {
   const load = async () => {
     try {
       const res = await callFetchSavedJobs();
-      setItems(res?.data || []);
+      const list = res?.data || [];
+      setItems(list);
     } catch {
       message.error("Không tải được danh sách đã lưu");
     }
@@ -41,11 +42,18 @@ export default function SavedJobsPage() {
                 onClick={() => navigate(`/job/${it.jobId}`)}
                 cover={
                   <div style={{ height: 120, display: "grid", placeItems: "center", background: "#f6f8fb" }}>
-                    <img
-                      alt={it.companyName}
-                      src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${it.companyLogo}`}
-                      style={{ maxWidth: 120, maxHeight: 80, objectFit: "contain" }}
-                    />
+                    {(() => {
+                      const backend = import.meta.env.VITE_BACKEND_URL;
+                      const isAbsolute = typeof it.companyLogo === 'string' && /^https?:\/\//.test(it.companyLogo);
+                      const src = isAbsolute ? it.companyLogo : `${backend}/storage/company/${it.companyLogo}`;
+                      return (
+                        <img
+                          alt={it.companyName}
+                          src={src}
+                          style={{ maxWidth: 120, maxHeight: 80, objectFit: "contain" }}
+                        />
+                      );
+                    })()}
                   </div>
                 }
                 actions={[
@@ -53,9 +61,17 @@ export default function SavedJobsPage() {
                     title="Bỏ lưu công việc?"
                     onConfirm={async (e) => {
                       e?.stopPropagation?.();
-                      await callDeleteSavedJobBySavedId(it.id);
-                      message.success("Đã bỏ lưu");
-                      load();
+                      const prev = items;
+                      // optimistic remove
+                      setItems((cur) => cur.filter((x) => x.id !== it.id));
+                      try {
+                        const res = await callDeleteSavedJobBySavedId(it.id);
+                        message.success(res?.message || "Đã bỏ lưu");
+                      } catch (err) {
+                        message.error(err?.response?.data?.message || err?.response?.data?.error || "Xóa không thành công, thử lại");
+                        // rollback
+                        setItems(prev);
+                      }
                     }}
                     onCancel={(e) => e?.stopPropagation?.()}
                   >
