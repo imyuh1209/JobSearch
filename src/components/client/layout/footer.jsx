@@ -25,18 +25,6 @@ const Footer = () => {
             <Paragraph style={{ color: "#a7b0c3", marginTop: 8 }}>
               Kết nối ứng viên & nhà tuyển dụng nhanh chóng, tiện lợi và hiệu quả.
             </Paragraph>
-
-            <Space size="middle" style={{ marginTop: 12 }}>
-              <a href="#" aria-label="Facebook" style={{ color: "#ffffff" }}>
-                <FacebookFilled style={{ fontSize: 20 }} />
-              </a>
-              <a href="#" aria-label="GitHub" style={{ color: "#ffffff" }}>
-                <GithubOutlined style={{ fontSize: 20 }} />
-              </a>
-              <a href="#" aria-label="LinkedIn" style={{ color: "#ffffff" }}>
-                <LinkedinFilled style={{ fontSize: 20 }} />
-              </a>
-            </Space>
           </Col>
 
           {/* Quick links */}
@@ -54,9 +42,6 @@ const Footer = () => {
               <AntLink href="/company" style={{ color: "#a7b0c3" }}>
                 Công ty
               </AntLink>
-              <AntLink href="/contact" style={{ color: "#a7b0c3" }}>
-                Liên hệ
-              </AntLink>
             </Space>
           </Col>
 
@@ -67,18 +52,11 @@ const Footer = () => {
             </Title>
             <Space direction="vertical" size={8} style={{ color: "#a7b0c3" }}>
               <span>
-                <MailOutlined /> support@jobhunter.vn
+                <MailOutlined /> huy12904@gmail.com
               </span>
               <span>
-                <PhoneFilled /> 0900 000 000
+                <PhoneFilled /> 0774477782
               </span>
-              <AntLink
-                href="https://linkedin.com/company/jobhunter"
-                target="_blank"
-                style={{ color: "#a7b0c3" }}
-              >
-                <LinkedinFilled /> linkedin.com/company/jobhunter
-              </AntLink>
             </Space>
           </Col>
         </Row>

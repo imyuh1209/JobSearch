@@ -135,8 +135,33 @@ const toggleSave = async () => {
 
   const updatedText = useMemo(() => {
     if (!jobDetail) return "";
-    const t = jobDetail.updatedAt || jobDetail.createdAt;
-    return t ? dayjs(t).fromNow() : "";
+    const parseDate = (val) => {
+      if (!val) return null;
+      if (typeof val === 'number') {
+        return val < 1e12 ? dayjs(val * 1000) : dayjs(val);
+      }
+      if (typeof val === 'string') {
+        const num = Number(val);
+        if (!Number.isNaN(num)) {
+          return num < 1e12 ? dayjs(num * 1000) : dayjs(num);
+        }
+      }
+      return dayjs(val);
+    };
+    const candidates = [
+      jobDetail?.updatedAt,
+      jobDetail?.updated_at,
+      jobDetail?.createdAt,
+      jobDetail?.created_at,
+      jobDetail?.publishedAt,
+      jobDetail?.postedAt,
+      jobDetail?.publishDate,
+      jobDetail?.postedDate,
+    ].filter(Boolean);
+    const t = candidates[0];
+    if (!t) return "";
+    const d = parseDate(t);
+    return d.isValid() ? d.fromNow() : "";
   }, [jobDetail]);
 
   const companyLogo = useMemo(() => {

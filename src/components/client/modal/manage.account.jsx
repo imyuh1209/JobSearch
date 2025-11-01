@@ -1,7 +1,7 @@
 import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification, Input, InputNumber } from 'antd';
 import { isMobile } from 'react-device-detect';
 import { useEffect, useState, useContext } from 'react';
-import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount } from '../../../services/api.service';
+import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount, callChangePassword } from '../../../services/api.service';
 import dayjs from 'dayjs';
 import { MonitorOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../context/auth.context";
@@ -37,7 +37,16 @@ export const UserResume = () => {
         },
         {
             title: 'Công Ty',
-            dataIndex: "companyName",
+            // Lấy tên công ty từ job.company.name với fallback
+            dataIndex: ["job", "company", "name"],
+            render: (_, record) => {
+                const name = record?.job?.company?.name
+                    || record?.job?.companyName
+                    || record?.company?.name
+                    || record?.companyName
+                    || null;
+                return name ? name : 'Đang cập nhật';
+            }
         },
         {
             title: 'Job title',
@@ -94,17 +103,16 @@ export const JobByEmail = () => {
         const init = async () => {
             console.log("init");
             await fetchSkill();
+            // Giá trị email mặc định theo tài khoản hiện tại
+            form.setFieldValue("email", user?.email || "");
             const res = await callGetSubscriberSkills();
             if (res && res.data) {
                 setSubscriber(res.data);
-                const d = res.data.skills;
-                const arr = d.map((item) => {
-                    return {
-                        label: item.name,
-                        value: item.id + ""
-                    }
-                });
+                const d = res.data.skills || [];
+                const arr = d.map((item) => ({ label: item.name, value: item.id + "" }));
                 form.setFieldValue("skills", arr);
+                // Nếu subscriber có email riêng thì ghi đè
+                form.setFieldValue("email", res.data?.email || user?.email || "");
             }
         }
         init();
@@ -131,7 +139,8 @@ export const JobByEmail = () => {
             return;
         }
 
-        const { skills } = values;
+        const { skills, email } = values;
+        const normalizedEmail = (email || "").trim();
 
         const arr = skills?.map((item) => {
             if (item?.id) return { id: item.id };
@@ -141,7 +150,7 @@ export const JobByEmail = () => {
         if (!subscriber?.id) {
             //create subscriber
             const data = {
-                email: user.email,
+                email: normalizedEmail,
                 name: user.name,
                 skills: arr
             }
@@ -160,7 +169,7 @@ export const JobByEmail = () => {
             //update subscriber
             const data = {
                 id: subscriber.id,
-                email: user.email,
+                email: normalizedEmail,
                 name: user.name,
                 skills: arr
             }
@@ -177,42 +186,6 @@ export const JobByEmail = () => {
             }
         }
     }
-
-    return (
-        <>
-            <Form
-                onFinish={onFinish}
-                form={form}
-            >
-                <Row gutter={[20, 20]}>
-                    <Col span={24}>
-                        <Form.Item
-                            label={"Kỹ năng"}
-                            name={"skills"}
-                            rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 skill!' }]}
-                        >
-                            <Select
-                                mode="multiple"
-                                allowClear
-                                suffixIcon={null}
-                                style={{ width: '100%' }}
-                                placeholder={
-                                    <>
-                                        <MonitorOutlined /> Tìm theo kỹ năng...
-                                    </>
-                                }
-                                optionLabelProp="label"
-                                options={optionsSkills}
-                            />
-                        </Form.Item>
-                    </Col>
-                    <Col span={24}>
-                        <Button onClick={() => form.submit()}>Cập nhật</Button>
-                    </Col>
-                </Row>
-            </Form>
-        </>
-    )
 }
 
 export const UserUpdateInfo = () => {
@@ -224,7 +197,6 @@ export const UserUpdateInfo = () => {
             form.setFieldsValue({
                 name: user.name || "",
                 email: user.email || "",
-                age: user.age || undefined,
                 gender: user.gender || undefined,
                 address: user.address || "",
             });
@@ -238,7 +210,6 @@ export const UserUpdateInfo = () => {
             const payload = {
                 name: (values.name ?? "").trim(),
                 email: user?.email || values.email || "",
-                age: Number(values.age),
                 gender: values.gender,
                 address: values.address ?? "",
             };
@@ -263,7 +234,6 @@ export const UserUpdateInfo = () => {
                         form.setFieldsValue({
                             name: acc.data.user.name || "",
                             email: acc.data.user.email || "",
-                            age: acc.data.user.age ?? undefined,
                             gender: acc.data.user.gender ?? undefined,
                             address: acc.data.user.address || "",
                         });
@@ -298,11 +268,7 @@ export const UserUpdateInfo = () => {
                         <Input disabled />
                     </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
-                    <Form.Item label="Tuổi" name="age" rules={[{ required: true, message: "Vui lòng nhập tuổi" }]}> 
-                        <InputNumber min={1} style={{ width: '100%' }} />
-                    </Form.Item>
-                </Col>
+                {/* Bỏ mục nhập tuổi theo yêu cầu */}
                 <Col xs={24} md={12}>
                     <Form.Item label="Giới tính" name="gender" rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}> 
                         <Select
@@ -327,6 +293,76 @@ export const UserUpdateInfo = () => {
     );
 }
 
+export const ChangePassword = () => {
+    const [form] = Form.useForm();
+
+    const onFinish = async (values) => {
+        const { currentPassword, newPassword } = values;
+        try {
+            const res = await callChangePassword(currentPassword, newPassword);
+            // Nếu request thành công (không throw), coi là thành công
+            notification.success({
+                message: "Đổi mật khẩu thành công",
+                description: (typeof res?.message === 'string' && res.message) || "Mật khẩu đã được cập nhật."
+            });
+            form.resetFields();
+        } catch (e) {
+            notification.error({
+                message: "Lỗi",
+                description: e?.response?.data?.message || e.message || "Không thể đổi mật khẩu",
+            });
+        }
+    };
+
+    return (
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+            <Row gutter={[16, 16]}>
+                <Col span={24}>
+                    <Form.Item
+                        label="Mật khẩu hiện tại"
+                        name="currentPassword"
+                        rules={[{ required: true, message: "Vui lòng nhập mật khẩu hiện tại" }]}
+                    >
+                        <Input.Password placeholder="Nhập mật khẩu hiện tại" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={24}>
+                    <Form.Item
+                        label="Mật khẩu mới"
+                        name="newPassword"
+                        rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }, { min: 6, message: "Ít nhất 6 ký tự" }]}
+                    >
+                        <Input.Password placeholder="Nhập mật khẩu mới" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={24}>
+                    <Form.Item
+                        label="Xác nhận mật khẩu"
+                        name="confirmPassword"
+                        dependencies={["newPassword"]}
+                        rules={[
+                            { required: true, message: "Vui lòng xác nhận mật khẩu" },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (!value || getFieldValue("newPassword") === value) {
+                                        return Promise.resolve();
+                                    }
+                                    return Promise.reject(new Error("Mật khẩu xác nhận không khớp"));
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input.Password placeholder="Nhập lại mật khẩu mới" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={24}>
+                    <Button type="primary" onClick={() => form.submit()}>Đổi mật khẩu</Button>
+                </Col>
+            </Row>
+        </Form>
+    );
+}
+
 const ManageAccount = (props) => {
     const { open, onClose } = props;
 
@@ -340,11 +376,7 @@ const ManageAccount = (props) => {
             label: `Lịch sử ứng tuyển`,
             children: <UserResume />,
         },
-        {
-            key: 'email-by-skills',
-            label: `Nhận Jobs qua Email`,
-            children: <JobByEmail />,
-        }
+    
     ];
 
     return (

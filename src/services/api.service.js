@@ -102,6 +102,12 @@ const logoutUserAPI = () => {
     return axios.post(URL_BACKEND);
 }
 
+// Change password for current authenticated user
+const callChangePassword = (currentPassword, newPassword) => {
+    const URL_BACKEND = "/api/v1/auth/change-password";
+    return axios.post(URL_BACKEND, { currentPassword, newPassword });
+}
+
 const callCreateCompany = (data) => {
     const URL_BACKEND = "/api/v1/companies";
     return axios.post(URL_BACKEND, data);
@@ -133,17 +139,19 @@ const callUpdateUser = (id, data) => {
     const URL_BACKEND = "/api/v1/users";
     // Ép kiểu và chuẩn hóa dữ liệu trước khi gửi
     const safeId = Number(id);
-    const safeAge = data.age != null ? Number(data.age) : 16;
     const payload = {
         id: Number.isFinite(safeId) ? safeId : undefined,
         name: (data.name ?? "").trim(),
         email: data.email || "",
-        age: Number.isFinite(safeAge) && safeAge > 0 ? safeAge : 16,
         gender: data.gender || "MALE",
         address: data.address || "",
-        // Đảm bảo gửi role theo đúng cấu trúc backend mong đợi
+        // Gửi role nếu có
         ...(data.role?.id ? { role: { id: Number(data.role.id) } } : {})
     };
+    // Chỉ thêm age khi người dùng cung cấp
+    if (data.age != null && Number.isFinite(Number(data.age)) && Number(data.age) > 0) {
+        payload.age = Number(data.age);
+    }
     return axios.put(URL_BACKEND, payload);
 }
 
@@ -341,6 +349,7 @@ export {
   callSaveJob,
   callFetchSavedJobs,
   callDeleteSavedJobBySavedId,
- callUnsaveByJobId,
- callIsSavedJob,
+  callUnsaveByJobId,
+  callIsSavedJob,
+  callChangePassword,
 };

@@ -24,6 +24,9 @@ import PermissionPage from './pages/admin/permission.jsx';
 import RolePage from './pages/admin/role.jsx';
 import SavedJobsPage from "./pages/job/saved.jobs";
 import AccountPage from './pages/account/index.jsx';
+import PrivacyPage from './pages/static/privacy.jsx';
+import TermsPage from './pages/static/terms.jsx';
+import AboutPage from './pages/static/about.jsx';
 
 const router = createBrowserRouter([
   {
@@ -44,6 +47,9 @@ const router = createBrowserRouter([
       { path: '/company', element: <CompanyPage /> },
       { path: '/company/:id', element: <ClientCompanyDetailPage /> },
       { path: "/saved-jobs", element: <SavedJobsPage /> }
+      ,{ path: '/privacy', element: <PrivacyPage /> }
+      ,{ path: '/terms', element: <TermsPage /> }
+      ,{ path: '/about', element: <AboutPage /> }
       ,{ path: '/account', element: (
         <PrivateRoute>
           <AccountPage />

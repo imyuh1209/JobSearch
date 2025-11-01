@@ -1,12 +1,12 @@
 import React from 'react';
 import { Tabs, Card } from 'antd';
-import { UserUpdateInfo, UserResume, JobByEmail } from '../../components/client/modal/manage.account';
+import { UserUpdateInfo, UserResume, JobByEmail, ChangePassword } from '../../components/client/modal/manage.account';
 
 const AccountPage = () => {
   const items = [
     { key: 'profile', label: 'Thông tin cá nhân', children: <UserUpdateInfo /> },
     { key: 'resume', label: 'Lịch sử ứng tuyển', children: <UserResume /> },
-    { key: 'email-jobs', label: 'Nhận Jobs qua Email', children: <JobByEmail /> },
+    { key: 'change-password', label: 'Đổi mật khẩu', children: <ChangePassword /> },
   ];
 
   return (

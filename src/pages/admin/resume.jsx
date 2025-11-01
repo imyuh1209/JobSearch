@@ -146,7 +146,16 @@ const ResumePage = () => {
         },
         {
             title: "Tên Công Ty",
-            dataIndex: "companyName",
+            // Hiển thị linh hoạt theo nhiều dạng dữ liệu trả về từ backend
+            render: (_, record) => {
+                const companyName =
+                    record?.job?.company?.name ||
+                    record?.job?.companyName ||
+                    record?.company?.name ||
+                    record?.companyName ||
+                    null;
+                return <>{companyName || "Đang cập nhật"}</>;
+            },
         },
         {
             title: "Ngày tạo",

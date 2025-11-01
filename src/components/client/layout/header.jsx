@@ -7,7 +7,7 @@ import {
   SearchOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { Input, Menu, notification } from "antd";
+import { Input, Menu, notification, Dropdown, Space, Button, Avatar, Badge } from "antd";
 import { useContext, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/auth.context";
@@ -43,6 +43,7 @@ const Header = () => {
     }
   };
 
+  // Main navigation items (left)
   const items = [
     {
       key: "home",
@@ -59,47 +60,22 @@ const Header = () => {
       icon: <FileTextOutlined />,
       label: <NavLink to="/job">Jobs</NavLink>,
     },
-    ...(!user.id
-      ? [
-          {
-            label: <Link to={"/login"}>Đăng nhập</Link>,
-            key: "login",
-            icon: <LoginOutlined />,
-          },
-          {
-            label: <Link to={"/register"}>Đăng ký</Link>,
-            key: "register",
-            icon: <UserAddOutlined />,
-          },
-        ]
-      : [
-          {
-            label: `Welcome ${user.name}`,
-            key: "setting",
-            icon: <AliwangwangOutlined />,
-            children: [
-              {
-                label: <NavLink to="/account">Quản lý tài khoản</NavLink>,
-              },
-              // Chỉ hiển thị Trang quản trị khi không phải tài khoản USER
-              ...((user?.role?.name === 'SUPER_ADMIN' || user?.role?.name === 'Công ty' || user?.role?.name === 'Company')
-                ? [{ label: <NavLink to="/admin">Trang quản trị</NavLink> }]
-                : []),
-              // Trang quản lý CV: chuyển hướng vào trang admin/resume
-              ...((user?.role?.name === 'Công ty' || user?.role?.name === 'Company' || user?.role?.name === 'SUPER_ADMIN')
-                ? [{ label: <NavLink to="/admin/resume">Quản lý CV ứng tuyển</NavLink> }]
-                : []),
-              
-                              ...((user?.role?.name === 'User')
-                ? [{ label: <NavLink to="/saved-jobs">Công việc đã lưu</NavLink> }]
-                : []),
-              {
-                label: <span onClick={handleLogout}>Đăng xuất</span>,
-                key: "logout",
-              },
-            ],
-          },
-        ]),
+  ];
+
+  // Auth actions (right)
+  const authDropdownItems = [
+    { label: <NavLink to="/account">Quản lý tài khoản</NavLink>, key: "account" },
+    // Admin pages based on role
+    ...((user?.role?.name === 'SUPER_ADMIN' || user?.role?.name === 'Công ty' || user?.role?.name === 'Company')
+      ? [{ label: <NavLink to="/admin">Trang quản trị</NavLink>, key: "admin" }]
+      : []),
+    ...((user?.role?.name === 'Công ty' || user?.role?.name === 'Company' || user?.role?.name === 'SUPER_ADMIN')
+      ? [{ label: <NavLink to="/admin/resume">Quản lý CV ứng tuyển</NavLink>, key: "admin-resume" }]
+      : []),
+    ...((user?.role?.name === 'User')
+      ? [{ label: <NavLink to="/saved-jobs">Công việc đã lưu</NavLink>, key: "saved-jobs" }]
+      : []),
+    { label: <span onClick={handleLogout}>Đăng xuất</span>, key: "logout" },
   ];
 
   const onSearchCategory = (value) => {
@@ -123,11 +99,12 @@ const Header = () => {
           zIndex: 100,
         }}
       >
-        {/* Top bar: Logo + Search + Actions */}
+        {/* Top bar: Logo + Search + Right Actions */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             gap: 16,
             padding: "8px 12px",
           }}
@@ -176,8 +153,56 @@ const Header = () => {
             />
           </div>
 
-          {/* Khoảng trống để menu không bị đẩy xuống trên màn hình hẹp */}
-          <div style={{ width: 8 }} />
+          {/* Right actions: login/register or welcome dropdown */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {!user?.id ? (
+              <Space>
+                <Link to="/login">
+                  <Button
+                    type="default"
+                    size="large"
+                    shape="round"
+                    ghost
+                    icon={<LoginOutlined style={{ fontSize: 18 }} />}
+                    style={{ borderColor: "#1677ff", color: "#1677ff" }}
+                  >
+                    Đăng nhập
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button
+                    type="primary"
+                    size="large"
+                    shape="round"
+                    icon={<UserAddOutlined style={{ fontSize: 18 }} />}
+                    style={{ boxShadow: "0 2px 0 rgba(5, 145, 255, 0.1)", filter: "brightness(1.05)" }}
+                  >
+                    Đăng ký
+                  </Button>
+                </Link>
+              </Space>
+            ) : (
+              <Dropdown menu={{ items: authDropdownItems }} trigger={["click"]}>
+                <Space style={{ cursor: "pointer" }}>
+                  <AliwangwangOutlined style={{ fontSize: 18, color: "#1677ff" }} />
+                  <span>Welcome {user?.name}</span>
+                  <Badge dot color="#52c41a" offset={[-2, 2]}>
+                    <Avatar
+                      size={28}
+                      style={{
+                        background: "linear-gradient(135deg, #1677ff 0%, #69c0ff 100%)",
+                        color: "#fff",
+                        border: "2px solid #fff",
+                        boxShadow: "0 0 0 2px rgba(22, 119, 255, 0.35)",
+                      }}
+                    >
+                      {user?.name?.substring(0, 1)?.toUpperCase()}
+                    </Avatar>
+                  </Badge>
+                </Space>
+              </Dropdown>
+            )}
+          </div>
         </div>
 
         {/* Main menu */}

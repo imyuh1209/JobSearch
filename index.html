@@ -1,13 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/storage/logoweb.png" />
+    <!-- Fallback favicon; will be replaced at runtime via VITE_BACKEND_URL -->
+    <link id="favicon" rel="icon" type="image/png" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Việc làm nhanh</title>
+    <meta name="theme-color" content="#1677ff" />
+    <meta name="description" content="Nền tảng tìm việc nhanh, hiệu quả, phù hợp kỹ năng." />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <!-- Set favicon from backend env at runtime -->
+    <script type="module">
+      const setFavicon = (href) => {
+        const link = document.getElementById('favicon') || (() => {
+          const l = document.createElement('link');
+          l.id = 'favicon';
+          l.rel = 'icon';
+          l.type = 'image/png';
+          document.head.appendChild(l);
+          return l;
+        })();
+        link.href = href;
+      };
+
+      const base = import.meta.env?.VITE_BACKEND_URL || '';
+      if (base) {
+        const logo = `${base}/storage/logoweb.png`;
+        setFavicon(logo);
+      }
+    </script>
   </body>
 </html>
