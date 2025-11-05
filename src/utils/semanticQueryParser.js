@@ -154,6 +154,7 @@ export const parseSemanticQuery = (input = "") => {
   const location = extractLocation(norm);
   const level = extractLevel(norm);
   const keyword = extractKeywords(text);
+  const companyName = extractCompanyName(text);
 
   return {
     keyword,
@@ -161,7 +162,24 @@ export const parseSemanticQuery = (input = "") => {
     location,
     salaryMin: salaryMin ?? null,
     salaryMax: salaryMax ?? null,
+    companyName,
   };
 };
 
 export default parseSemanticQuery;
+
+// --- Company name extraction ---
+// Supports patterns:
+//  - "@Viettel" (leading @)
+//  - "company: FPT", "công ty: VNG", "cty: ABC"
+// Keeps simple to avoid false positives; prefer explicit tokens.
+function extractCompanyName(text = "") {
+  const t = String(text || "");
+  // @Company pattern
+  const at = t.match(/@([\w\p{L}][^\s,;]+)/u);
+  if (at) return at[1].trim();
+  // company: name patterns
+  const colon = t.match(/\b(company|công ty|cty)\s*:\s*([^,;\n]+)/i);
+  if (colon) return (colon[2] || "").trim();
+  return "";
+}

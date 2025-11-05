@@ -25,6 +25,7 @@ import {
   callFetchCompanyById,
   fetchJobsByCompanyAPI,
 } from "../../services/api.service";
+import { getLocationLabel } from "../../config/utils";
 import "../../styles/ClientCompanyDetail.css";
 
 const { Title, Paragraph, Text } = Typography;
@@ -194,11 +195,18 @@ const ClientCompanyDetailPage = () => {
                       <div className="job-card__meta">
                         <span className="meta-item">
                           <EnvironmentOutlined />
-                          <Text>&nbsp;{job.location || "Toàn quốc"}</Text>
+                          <Text>&nbsp;{getLocationLabel(job.location)}</Text>
                         </span>
                         <span className="meta-item">
                           <ThunderboltOutlined style={{ color: "orange" }} />
-                          <Text>&nbsp;{currency(job.salary || 0)}</Text>
+                          <Text>&nbsp;
+                            {(() => {
+                              const min = job?.salaryMin;
+                              const max = job?.salaryMax;
+                              if (min == null && max == null) return 'Thoả thuận';
+                              return min === max ? currency(min) : `${currency(min)} — ${currency(max)}`;
+                            })()}
+                          </Text>
                         </span>
                       </div>
 

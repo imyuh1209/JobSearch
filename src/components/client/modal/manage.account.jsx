@@ -1,6 +1,7 @@
 import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification, Input, InputNumber } from 'antd';
 import { isMobile } from 'react-device-detect';
 import { useEffect, useState, useContext } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount, callChangePassword } from '../../../services/api.service';
 import dayjs from 'dayjs';
 import { MonitorOutlined } from "@ant-design/icons";
@@ -8,19 +9,73 @@ import { AuthContext } from "../../context/auth.context";
 
 export const UserResume = () => {
     const [listCV, setListCV] = useState([]);
+    const [rawCV, setRawCV] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
+    const [form] = Form.useForm();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     useEffect(() => {
         const init = async () => {
             setIsFetching(true);
             const res = await callFetchResumeByUser();
             if (res && res.data) {
-                setListCV(res.data.result)
+                const data = res.data.result || [];
+                setRawCV(data);
+                // Áp dụng bộ lọc từ query nếu có
+                const status = searchParams.get('status') || '';
+                const company = searchParams.get('company') || '';
+                const job = searchParams.get('job') || '';
+                form.setFieldsValue({ status, company, job });
+                setListCV(applyFilters(data, { status, company, job }));
             }
             setIsFetching(false);
         }
         init();
     }, [])
+
+    // Lấy tên công ty từ nhiều nguồn
+    const getCompanyName = (record) => {
+        return (
+            record?.job?.company?.name ||
+            record?.job?.companyName ||
+            record?.company?.name ||
+            record?.companyName ||
+            ''
+        );
+    };
+
+    const applyFilters = (data, filters) => {
+        const status = (filters.status || '').toLowerCase();
+        const company = (filters.company || '').toLowerCase();
+        const job = (filters.job || '').toLowerCase();
+        return (data || []).filter((r) => {
+            const rStatus = (r?.status || '').toLowerCase();
+            const rCompany = (getCompanyName(r) || '').toLowerCase();
+            const rJob = (r?.job?.name || '').toLowerCase();
+            const okStatus = status ? rStatus.includes(status) : true;
+            const okCompany = company ? rCompany.includes(company) : true;
+            const okJob = job ? rJob.includes(job) : true;
+            return okStatus && okCompany && okJob;
+        });
+    };
+
+    const onFinish = (values) => {
+        const { status = '', company = '', job = '' } = values;
+        setListCV(applyFilters(rawCV, { status, company, job }));
+        const params = new URLSearchParams({ tab: 'resume' });
+        if (status) params.set('status', status);
+        if (company) params.set('company', company);
+        if (job) params.set('job', job);
+        setSearchParams(params);
+    };
+
+    const handleReset = () => {
+        form.resetFields();
+        setListCV(rawCV);
+        const params = new URLSearchParams({ tab: 'resume' });
+        setSearchParams(params);
+    };
 
     const columns = [
         {
@@ -57,6 +112,11 @@ export const UserResume = () => {
             dataIndex: "status",
         },
         {
+            title: 'Email',
+            dataIndex: 'email',
+            render: (email) => email || '—',
+        },
+        {
             title: 'Ngày rải CV',
             dataIndex: "createdAt",
             render(value, record) {
@@ -66,14 +126,33 @@ export const UserResume = () => {
             },
         },
         {
+            title: 'File CV',
+            dataIndex: 'url',
+            render(value, record) {
+                const url = record?.url;
+                if (!url) return 'Không có CV';
+                const href = `${import.meta.env.VITE_BACKEND_URL}/storage/resume/${url}`;
+                return (
+                    <a href={href} target="_blank" rel="noreferrer">Xem CV</a>
+                );
+            }
+        },
+        {
             title: '',
             dataIndex: "",
             render(value, record) {
+                const status = record?.status || '';
+                const companyName = getCompanyName(record);
+                const jobName = record?.job?.name || '';
+                const goto = () => {
+                    const params = new URLSearchParams({ tab: 'resume' });
+                    if (status) params.set('status', status);
+                    if (companyName) params.set('company', companyName);
+                    if (jobName) params.set('job', jobName);
+                    navigate(`/account?${params.toString()}`);
+                };
                 return (
-                    <a
-                        href={`${import.meta.env.VITE_BACKEND_URL}/storage/resume/${record?.url}`}
-                        target="_blank"
-                    >Chi tiết</a>
+                    <Button type="link" onClick={goto}>Chi tiết</Button>
                 )
             },
         },
@@ -81,6 +160,26 @@ export const UserResume = () => {
 
     return (
         <div>
+            <Form form={form} layout="inline" onFinish={onFinish} style={{ marginBottom: 12 }}>
+                <Form.Item name="status" label="Trạng thái">
+                    <Select allowClear placeholder="Chọn trạng thái" style={{ minWidth: 160 }}>
+                        <Select.Option value="PENDING">PENDING</Select.Option>
+                        <Select.Option value="REVIEWING">REVIEWING</Select.Option>
+                        <Select.Option value="APPROVED">APPROVED</Select.Option>
+                        <Select.Option value="REJECTED">REJECTED</Select.Option>
+                    </Select>
+                </Form.Item>
+                <Form.Item name="company" label="Công ty">
+                    <Input allowClear placeholder="Tên công ty" style={{ minWidth: 200 }} />
+                </Form.Item>
+                <Form.Item name="job" label="Công việc">
+                    <Input allowClear placeholder="Tên công việc" style={{ minWidth: 220 }} />
+                </Form.Item>
+                <Form.Item>
+                    <Button type="primary" htmlType="submit" style={{ marginRight: 8 }}>Lọc</Button>
+                    <Button onClick={handleReset}>Làm lại</Button>
+                </Form.Item>
+            </Form>
             <Table
                 columns={columns}
                 dataSource={listCV}

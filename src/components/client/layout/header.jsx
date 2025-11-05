@@ -13,6 +13,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/auth.context";
 import { logoutUserAPI } from "../../../services/api.service";
 import ManageAccount from "../modal/manage.account";
+import { fetchAllCompanyAPI } from "../../../services/api.service";
+import { buildQuery } from "../../../config/utils";
 
 const { Search } = Input;
 
@@ -65,6 +67,7 @@ const Header = () => {
   // Auth actions (right)
   const authDropdownItems = [
     { label: <NavLink to="/account">Quản lý tài khoản</NavLink>, key: "account" },
+    { label: <NavLink to="/account?tab=resume">Lịch sử ứng tuyển</NavLink>, key: "applications-history" },
     // Admin pages based on role
     ...((user?.role?.name === 'SUPER_ADMIN' || user?.role?.name === 'Công ty' || user?.role?.name === 'Company')
       ? [{ label: <NavLink to="/admin">Trang quản trị</NavLink>, key: "admin" }]
@@ -72,16 +75,37 @@ const Header = () => {
     ...((user?.role?.name === 'Công ty' || user?.role?.name === 'Company' || user?.role?.name === 'SUPER_ADMIN')
       ? [{ label: <NavLink to="/admin/resume">Quản lý CV ứng tuyển</NavLink>, key: "admin-resume" }]
       : []),
-    ...((user?.role?.name === 'User')
+    // Hiển thị Saved Jobs cho tất cả người dùng đã đăng nhập (bao gồm admin/company)
+    ...((user?.id)
       ? [{ label: <NavLink to="/saved-jobs">Công việc đã lưu</NavLink>, key: "saved-jobs" }]
       : []),
     { label: <span onClick={handleLogout}>Đăng xuất</span>, key: "logout" },
   ];
 
-  const onSearchCategory = (value) => {
-    const v = value.trim();
+  // Parse input: support job keyword OR company name (prefix '@' or 'company:'/'công ty:')
+  const onSearchCategory = async (value) => {
+    const v = (value || "").trim();
     if (!v) return;
-    navigate(`/job?category=${encodeURIComponent(v)}`);
+    const lower = v.toLowerCase();
+    let companyName = "";
+    if (v.startsWith("@") && v.length > 1) companyName = v.slice(1).trim();
+    const companyMatch = lower.match(/^\s*(company|công ty|cty)\s*:\s*(.+)$/);
+    if (!companyName && companyMatch) companyName = (companyMatch[2] || "").trim();
+
+    // If no explicit company token, do a quick check against companies API
+    if (!companyName) {
+      try {
+        const q = buildQuery(1, 1, { name: v });
+        const res = await fetchAllCompanyAPI(q);
+        const total = res?.data?.meta?.total || 0;
+        if (total > 0) companyName = v; // treat as company
+      } catch (e) {
+        // ignore and fall back to category
+      }
+    }
+
+    if (companyName) navigate(`/job?company=${encodeURIComponent(companyName)}`);
+    else navigate(`/job?category=${encodeURIComponent(v)}`);
     setKeyword("");
   };
 
@@ -144,7 +168,7 @@ const Header = () => {
           {/* Search danh mục công việc */}
           <div style={{ flex: "1 1 auto", minWidth: 240, maxWidth: 520 }}>
             <Search
-              placeholder="Lọc theo danh mục công việc (ví dụ: IT, Sales, HR...)"
+              placeholder="Tìm công việc hoặc công ty (ví dụ: React, Viettel)"
               allowClear
               enterButton={<SearchOutlined />}
               value={keyword}

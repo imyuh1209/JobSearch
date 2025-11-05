@@ -16,8 +16,7 @@ const RegisterPage = () => {
                 email: (values.email || "").trim().toLowerCase(),
                 password: values.password,
                 gender: values.gender,
-                address: (values.address || "").trim(),
-                age: Number(values.age)
+                address: (values.address || "").trim()
             };
 
             const res = await registerUserAPI(
@@ -25,8 +24,7 @@ const RegisterPage = () => {
                 payload.email,
                 payload.password,
                 payload.gender,
-                payload.address,
-                payload.age
+                payload.address
             );
 
             if (res?.data) {
@@ -122,21 +120,7 @@ const RegisterPage = () => {
                         <Input.Password placeholder="Nhập lại mật khẩu" />
                     </Form.Item>
 
-                    <Form.Item label="Tuổi" name="age"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập tuổi!' },
-                            ({ getFieldValue }) => ({
-                                validator(_, value) {
-                                    const n = Number(value);
-                                    if (!Number.isFinite(n)) return Promise.reject('Tuổi phải là số');
-                                    if (n < 16) return Promise.reject('Tuổi tối thiểu là 16');
-                                    if (n > 100) return Promise.reject('Tuổi không hợp lệ');
-                                    return Promise.resolve();
-                                }
-                            })
-                        ]}>
-                        <Input type="number" placeholder="Nhập tuổi" />
-                    </Form.Item>
+                    
 
                     <Form.Item name="gender" label="Giới tính"
                         rules={[{ required: true, message: 'Giới tính không được để trống!' }]}> 

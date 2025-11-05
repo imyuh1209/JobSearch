@@ -50,15 +50,19 @@ export const buildQuery = (page, pageSize, filters = {}, additionalParams = {}) 
     // Add filters if provided
     const filterStrings = [];
 
-    // Handle salary range if provided
+    // Handle salary range overlap using salaryMin/salaryMax fields
+    // User's desired: salaryMin -> minimum expected; salaryMax -> maximum expected
+    // Overlap logic:
+    //  - If desired min provided: job.salaryMax >= desiredMin
+    //  - If desired max provided: job.salaryMin <= desiredMax
     const { salaryMin, salaryMax, ...restFilters } = filters || {};
     if (salaryMin !== undefined && salaryMin !== null && salaryMin !== "") {
-        const min = Number(salaryMin);
-        if (!Number.isNaN(min)) filterStrings.push(`salary >= ${min}`);
+        const desiredMin = Number(salaryMin);
+        if (!Number.isNaN(desiredMin)) filterStrings.push(`salaryMax >= ${desiredMin}`);
     }
     if (salaryMax !== undefined && salaryMax !== null && salaryMax !== "") {
-        const max = Number(salaryMax);
-        if (!Number.isNaN(max)) filterStrings.push(`salary <= ${max}`);
+        const desiredMax = Number(salaryMax);
+        if (!Number.isNaN(desiredMax)) filterStrings.push(`salaryMin <= ${desiredMax}`);
     }
 
     for (const key in restFilters) {
@@ -144,3 +148,13 @@ export const LOCATION_LIST = [
     // Tuỳ chọn khác
     { label: "Khác", value: "OTHER" }
 ];
+
+// Chuẩn hoá và hiển thị tên địa điểm có dấu từ mã địa điểm
+export const getLocationLabel = (code) => {
+    if (!code) return "Không xác định";
+    const normalized = String(code).trim().toUpperCase();
+    const found = LOCATION_LIST.find((loc) => loc.value === normalized);
+    if (!found) return String(code);
+    if (found.value === "ALL") return "Toàn quốc";
+    return found.label;
+};

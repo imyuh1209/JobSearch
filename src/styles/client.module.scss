@@ -147,15 +147,29 @@
         .card-job-content {
             display: flex;
             width: 100%;
-            gap: 10px;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 6px 24px rgba(18, 38, 63, 0.06);
 
             .card-job-left {
-                width: 70px;
+                width: 120px;
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #f6f8fb;
+                border: 1px solid #e5e7eb;
+                border-radius: 10px;
                 margin: 0 auto;
+                overflow: hidden;
 
                 img {
-                    width: 50px;
-                    height: 50px;
+                    max-width: 100px;
+                    max-height: 80px;
+                    object-fit: contain;
+                    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.08));
                 }
             }
 
@@ -164,41 +178,110 @@
 
                 .job-title {
                     overflow: hidden;
-                    color: #353535;
+                    color: #1f2430;
                     font-weight: 600;
                     text-overflow: ellipsis;
                     text-align: left;
-                    margin-bottom: 10px;
+                    margin-bottom: 8px;
                     line-height: 1.3;
                     transition: .2s all;
-                    font-size: 17px;
+                    font-size: 19px;
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
                     -webkit-box-orient: vertical;
                 }
 
                 .job-location {
-                    padding-bottom: 5px;
+                    padding-bottom: 6px;
+                    color: #4b5563;
                 }
 
                 .job-updatedAt {
                     display: block;
                     float: right;
-                    color: #919191;
+                    color: #667085;
                 }
             }
         }
     }
 }
 
+.smart-search-card {
+    border: 2px solid transparent;
+    border-radius: 16px;
+    background: 
+        linear-gradient(#ffffff, #ffffff) padding-box,
+        linear-gradient(90deg, #0ea5e9 0%, #6366f1 100%) border-box;
+    box-shadow: 0 6px 24px rgba(18, 38, 63, 0.06);
+
+    // Giữ nội dung bên trong bo tròn đồng nhất
+    :global(.ant-card-body) {
+        border-radius: 14px;
+    }
+
+    // Hiệu ứng hover/focus nhẹ cho cả khung
+    &:hover {
+        background: 
+            linear-gradient(#ffffff, #ffffff) padding-box,
+            linear-gradient(90deg, #22d3ee 0%, #6366f1 100%) border-box;
+        box-shadow: 0 8px 28px rgba(18, 38, 63, 0.08);
+    }
+}
+
+.filter-grid {
+    :global(.ant-form-item) {
+        margin-bottom: 6px;
+    }
+    :global(.ant-form-item-label > label) {
+        color: #667085;
+        font-weight: 500;
+    }
+}
+
+.smart-search {
+    // Viền xám nhẹ cho ô nhập, bỏ màu gradient
+    :global(.ant-input-affix-wrapper) {
+        border: 1px solid #e5e7eb;
+        border-radius: 9999px;
+        background: #ffffff;
+        transition: box-shadow .2s ease, border-color .2s ease;
+    }
+
+    :global(.ant-input-affix-wrapper:hover),
+    :global(.ant-input-affix-wrapper-focused) {
+        box-shadow: 0 0 0 4px rgba(31, 41, 55, 0.08);
+        border-color: #d1d5db;
+    }
+
+    // Bỏ viền bên trong input, dùng viền wrapper
+    :global(.ant-input) {
+        border: none;
+        box-shadow: none;
+        outline: none;
+        background: transparent;
+    }
+}
+
 .company-section {
     .company-content {
-        padding-top: 50px;
+        padding-top: 40px;
 
         .card-customize {
-            height: 200px;
-            width: 200px;
-            margin: 20px auto;
+            height: 220px;
+            width: 220px;
+            margin: 16px auto;
+            display: grid;
+            place-items: center;
+            background: #f6f8fb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            img {
+                max-width: 160px;
+                max-height: 120px;
+                object-fit: contain;
+                filter: drop-shadow(0 6px 14px rgba(0,0,0,0.08));
+            }
         }
     }
 

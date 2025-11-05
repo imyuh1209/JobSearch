@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Card, Row, Col, Empty, message, Popconfirm, Button, Space } from "antd";
+import { Card, Row, Col, Empty, message, Popconfirm, Button, Space, Tag } from "antd";
 import { EnvironmentOutlined, ThunderboltOutlined, DeleteOutlined } from "@ant-design/icons";
 import { callFetchSavedJobs, callDeleteSavedJobBySavedId } from "../../services/api.service";
 import { useNavigate } from "react-router-dom";
@@ -84,9 +84,21 @@ export default function SavedJobsPage() {
                   <div style={{ color: "#4b5563" }}>{it.companyName}</div>
                   <div style={{ display: "flex", gap: 12, color: "#4b5563" }}>
                     <span><EnvironmentOutlined /> {it.location || "Toàn quốc"}</span>
-                    <span><ThunderboltOutlined style={{ color: "orange" }} /> {currency(it.salary || 0)}</span>
+                    <span>
+                      <ThunderboltOutlined style={{ color: "orange" }} /> {
+                        (it.salaryMin == null && it.salaryMax == null)
+                          ? 'Thoả thuận'
+                          : (it.salaryMin === it.salaryMax
+                              ? currency(it.salaryMin)
+                              : `${currency(it.salaryMin)} — ${currency(it.salaryMax)}`)
+                      }
+                    </span>
                   </div>
-                  {it.level && <span style={{ color: "#1677ff" }}>{it.level}</span>}
+                  {it.level && (
+                    <Tag color="geekblue" style={{ borderRadius: 999, padding: "0 10px" }}>
+                      {it.level}
+                    </Tag>
+                  )}
                 </Space>
               </Card>
             </Col>

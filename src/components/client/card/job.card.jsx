@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Card, Col, Row, Divider, Pagination, Spin, Empty, Form, Select, InputNumber, Button, Space, message, Input } from "antd";
+import { Card, Col, Row, Divider, Pagination, Spin, Empty, Form, Select, InputNumber, Button, Space, message, Input, Tag } from "antd";
 import { fetchAllJobAPI, callSaveJob, callFetchSavedJobs, callUnsaveByJobId, callDeleteSavedJobBySavedId } from "../../../services/api.service";
 import { isMobile } from "react-device-detect";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -8,6 +8,7 @@ import { EnvironmentOutlined, ThunderboltOutlined, HeartOutlined, HeartFilled } 
 import { buildQuery, LOCATION_LIST } from "../../../config/utils";
 import parseSemanticQuery from "../../../utils/semanticQueryParser";
 import { AuthContext } from "../../context/auth.context";
+ 
 
 
 const JobCard = ({ showPagination = false }) => {
@@ -17,7 +18,7 @@ const JobCard = ({ showPagination = false }) => {
     const [pageSize, setPageSize] = useState(6);
     const [total, setTotal] = useState(0);
     const [keyword, setKeyword] = useState("");
-    const [filters, setFilters] = useState({ level: "", location: "", salaryMin: null, salaryMax: null });
+    const [filters, setFilters] = useState({ level: "", location: "", salaryMin: null, salaryMax: null, companyName: "" });
     const [form] = Form.useForm();
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,6 +48,7 @@ const JobCard = ({ showPagination = false }) => {
         const loc = (params.get("location") || "").trim();
         const sMinRaw = params.get("salaryMin");
         const sMaxRaw = params.get("salaryMax");
+        const company = (params.get("company") || "").trim();
         const sMin = sMinRaw !== null && sMinRaw !== "" ? Number(sMinRaw) : null;
         const sMax = sMaxRaw !== null && sMaxRaw !== "" ? Number(sMaxRaw) : null;
         const pageRaw = params.get("page");
@@ -55,7 +57,7 @@ const JobCard = ({ showPagination = false }) => {
         const size = sizeRaw ? parseInt(sizeRaw, 10) : 6;
 
         setKeyword(cat);
-        setFilters({ level, location: loc, salaryMin: Number.isNaN(sMin) ? null : sMin, salaryMax: Number.isNaN(sMax) ? null : sMax });
+        setFilters({ level, location: loc, salaryMin: Number.isNaN(sMin) ? null : sMin, salaryMax: Number.isNaN(sMax) ? null : sMax, companyName: company });
         setCurrent(Number.isNaN(page) ? 1 : page);
         setPageSize(Number.isNaN(size) ? 6 : size);
         // Đồng bộ giá trị lên Form
@@ -64,6 +66,7 @@ const JobCard = ({ showPagination = false }) => {
             location: loc || undefined,
             salaryMin: Number.isNaN(sMin) ? undefined : sMin,
             salaryMax: Number.isNaN(sMax) ? undefined : sMax,
+            companyName: company || undefined,
         });
     }, [location.search]);
 
@@ -104,6 +107,7 @@ const JobCard = ({ showPagination = false }) => {
             if (filters.location && filters.location !== "ALL") baseFilters.location = filters.location;
             if (filters.salaryMin != null) baseFilters.salaryMin = filters.salaryMin;
             if (filters.salaryMax != null) baseFilters.salaryMax = filters.salaryMax;
+            if (filters.companyName) baseFilters["company.name"] = filters.companyName;
 
             // 2) Truy vấn lần đầu với điều kiện đầy đủ
             let res = await runQuery(current, pageSize, baseFilters);
@@ -121,6 +125,15 @@ const JobCard = ({ showPagination = false }) => {
                 { desc: "bỏ 'Level'", apply: (f) => { const { level, ...rest } = f; return rest; } },
                 { desc: "bỏ 'Địa điểm'", apply: (f) => { const { location, ...rest } = f; return rest; } },
                 { desc: "bỏ 'Lương từ'", apply: (f) => { const { salaryMin, ...rest } = f; return rest; } },
+                { desc: "chỉ lọc theo công ty", apply: (f) => {
+                    const next = { ...f };
+                    // keep only company filter if exists
+                    const company = next["company.name"];
+                    for (const k of Object.keys(next)) {
+                        if (k !== "company.name") delete next[k];
+                    }
+                    return company ? { "company.name": company } : {};
+                } },
                 { desc: "chỉ lọc theo từ khoá", apply: (f) => (f.name ? { name: f.name } : {}) },
                 { desc: "hiển thị tất cả công việc", apply: () => ({}) },
             ];
@@ -159,6 +172,7 @@ const JobCard = ({ showPagination = false }) => {
                 location: parsed.location || "",
                 salaryMin: parsed.salaryMin ?? null,
                 salaryMax: parsed.salaryMax ?? null,
+                companyName: parsed.companyName || "",
             };
 
             // Cập nhật form hiển thị để người dùng thấy các giá trị đã tách
@@ -167,6 +181,7 @@ const JobCard = ({ showPagination = false }) => {
                 location: nextFilters.location || undefined,
                 salaryMin: nextFilters.salaryMin ?? undefined,
                 salaryMax: nextFilters.salaryMax ?? undefined,
+                companyName: nextFilters.companyName || undefined,
             });
 
             if (!showPagination) {
@@ -180,6 +195,7 @@ const JobCard = ({ showPagination = false }) => {
                     location: nextFilters.location,
                     salaryMin: nextFilters.salaryMin,
                     salaryMax: nextFilters.salaryMax,
+                    companyName: nextFilters.companyName,
                     page: 1,
                 });
                 // Đồng bộ state ngay để UX mượt hơn
@@ -206,6 +222,7 @@ const JobCard = ({ showPagination = false }) => {
             "location",
             "salaryMin",
             "salaryMax",
+            "companyName",
         ]);
         handleFilterSubmit(values);
     };
@@ -218,6 +235,7 @@ const JobCard = ({ showPagination = false }) => {
         const nextLocation = overrides.location !== undefined ? overrides.location : filters.location;
         const nextSalaryMin = overrides.salaryMin !== undefined ? overrides.salaryMin : filters.salaryMin;
         const nextSalaryMax = overrides.salaryMax !== undefined ? overrides.salaryMax : filters.salaryMax;
+        const nextCompany = overrides.companyName !== undefined ? overrides.companyName : filters.companyName;
         const nextPage = overrides.page !== undefined ? overrides.page : current;
         const nextSize = overrides.size !== undefined ? overrides.size : pageSize;
 
@@ -226,6 +244,7 @@ const JobCard = ({ showPagination = false }) => {
         if (nextLocation) params.set("location", nextLocation);
         if (nextSalaryMin !== null && nextSalaryMin !== undefined && nextSalaryMin !== "") params.set("salaryMin", nextSalaryMin);
         if (nextSalaryMax !== null && nextSalaryMax !== undefined && nextSalaryMax !== "") params.set("salaryMax", nextSalaryMax);
+        if (nextCompany) params.set("company", nextCompany);
         params.set("page", nextPage);
         params.set("size", nextSize);
         navigate(`/job?${params.toString()}`);
@@ -291,23 +310,24 @@ const JobCard = ({ showPagination = false }) => {
     };
 
     const handleFilterSubmit = (values) => {
-        const { level, location, salaryMin, salaryMax } = values || {};
+        const { level, location, salaryMin, salaryMax, companyName } = values || {};
         if (!showPagination) {
             setFilters({
                 level: level || "",
                 location: location || "",
                 salaryMin: salaryMin ?? null,
                 salaryMax: salaryMax ?? null,
+                companyName: companyName || "",
             });
             setCurrent(1);
             return;
         }
-        updateURL({ level: level || "", location: location || "", salaryMin: salaryMin ?? null, salaryMax: salaryMax ?? null, page: 1 });
+        updateURL({ level: level || "", location: location || "", salaryMin: salaryMin ?? null, salaryMax: salaryMax ?? null, companyName: companyName || "", page: 1 });
     };
 
     const handleResetFilters = () => {
         if (!showPagination) {
-            setFilters({ level: "", location: "", salaryMin: null, salaryMax: null });
+            setFilters({ level: "", location: "", salaryMin: null, salaryMax: null, companyName: "" });
             form.resetFields();
             setCurrent(1);
             return;
@@ -338,45 +358,66 @@ const JobCard = ({ showPagination = false }) => {
                         </Col>
                         {showPagination && (
                             <Col span={24}>
-                                <Card size="small" style={{ marginTop: 8 }}>
-                                    <Form form={form} layout="inline" onFinish={handleFilterSubmit}>
-                                        <Form.Item name="semanticQuery" style={{ minWidth: 360 }} label="Tìm kiếm thông minh">
-                                            <Input
-                                                allowClear
-                                                placeholder="Ví dụ: việc làm React lương > 15tr ở HN"
-                                                onPressEnter={handleUnifiedSearch}
-                                            />
-                                        </Form.Item>
-                                        <Form.Item name="level" label="Level">
-                                            <Select placeholder="Chọn level" allowClear style={{ minWidth: 140 }}>
-                                                <Select.Option value="INTERN">INTERN</Select.Option>
-                                                <Select.Option value="FRESHER">FRESHER</Select.Option>
-                                                <Select.Option value="JUNIOR">JUNIOR</Select.Option>
-                                                <Select.Option value="MIDDLE">MIDDLE</Select.Option>
-                                                <Select.Option value="SENIOR">SENIOR</Select.Option>
-                                            </Select>
-                                        </Form.Item>
-                                        <Form.Item name="location" label="Địa điểm">
-                                            <Select placeholder="Chọn địa điểm" allowClear style={{ minWidth: 160 }}>
-                                                {LOCATION_LIST.map((loc) => (
-                                                    <Select.Option key={loc.value} value={loc.value}>{loc.label}</Select.Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-                                        <Form.Item name="salaryMin" label="Lương từ">
-                                            <InputNumber min={0} step={1000000} placeholder="Min" style={{ width: 120 }} />
-                                        </Form.Item>
-                                        <Form.Item name="salaryMax" label="đến">
-                                            <InputNumber min={0} step={1000000} placeholder="Max" style={{ width: 120 }} />
-                                        </Form.Item>
-                                        <Form.Item>
-                                            <Space>
-                                                <Button type="primary" onClick={handleUnifiedSearch} loading={semanticLoading}>
-                                                    Phân tích & Lọc
-                                                </Button>
-                                                <Button onClick={handleResetFilters}>Làm lại</Button>
-                                            </Space>
-                                        </Form.Item>
+                                <Card size="small" style={{ marginTop: 8 }} className={styles["smart-search-card"]}>
+                                    <Form form={form} layout="vertical" onFinish={handleFilterSubmit} className={styles["filter-grid"]}>
+                                        <Row gutter={[8, 8]} align="middle">
+                                            <Col xs={24} md={12} lg={8}>
+                                                <Form.Item name="semanticQuery" label="Tìm kiếm thông minh" className={styles["smart-search"]}>
+                                                    <Input
+                                                        allowClear
+                                                        placeholder="Ví dụ: React lương > 15tr ở HN Viettel"
+                                                        onPressEnter={handleUnifiedSearch}
+                                                    />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col xs={24} md={12} lg={6}>
+                                                <Form.Item name="companyName" label="Công ty">
+                                                    <Input allowClear placeholder="Tên công ty" />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col xs={12} md={6} lg={4}>
+                                                <Form.Item name="level" label="Level">
+                                                    <Select placeholder="Chọn level" allowClear>
+                                                        <Select.Option value="INTERN">INTERN</Select.Option>
+                                                        <Select.Option value="FRESHER">FRESHER</Select.Option>
+                                                        <Select.Option value="JUNIOR">JUNIOR</Select.Option>
+                                                        <Select.Option value="MIDDLE">MIDDLE</Select.Option>
+                                                        <Select.Option value="SENIOR">SENIOR</Select.Option>
+                                                    </Select>
+                                                </Form.Item>
+                                            </Col>
+                                            <Col xs={12} md={6} lg={4}>
+                                                <Form.Item name="location" label="Địa điểm">
+                                                    <Select placeholder="Chọn địa điểm" allowClear>
+                                                        {LOCATION_LIST.map((loc) => (
+                                                            <Select.Option key={loc.value} value={loc.value}>{loc.label}</Select.Option>
+                                                        ))}
+                                                    </Select>
+                                                </Form.Item>
+                                            </Col>
+                                            <Col xs={12} md={6} lg={4}>
+                                                <Form.Item name="salaryMin" label="Lương từ">
+                                                    <InputNumber min={0} step={1000000} placeholder="Min" style={{ width: "100%" }} />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col xs={12} md={6} lg={4}>
+                                                <Form.Item name="salaryMax" label="đến">
+                                                    <InputNumber min={0} step={1000000} placeholder="Max" style={{ width: "100%" }} />
+                                                </Form.Item>
+                                            </Col>
+                                        </Row>
+                                        <Row gutter={[8, 8]} style={{ marginTop: 6 }}>
+                                            <Col span={24}>
+                                                <Form.Item>
+                                                    <Space wrap>
+                                                        <Button type="primary" onClick={handleUnifiedSearch} loading={semanticLoading}>
+                                                            Phân tích & Lọc
+                                                        </Button>
+                                                        <Button onClick={handleResetFilters}>Đặt lại</Button>
+                                                    </Space>
+                                                </Form.Item>
+                                            </Col>
+                                        </Row>
                                     </Form>
                                 </Card>
                             </Col>
@@ -395,9 +436,27 @@ const JobCard = ({ showPagination = false }) => {
                                                 />
                                             </div>
                                             <div className={styles["card-job-right"]}>
-                                                <div className={styles["job-title"]}>{item.name}</div>
+                                                <div className={styles["job-title"]}>
+                                                    {item.name}
+                                                </div>
+                                                {!!item.level && (
+                                                    <div style={{ margin: "4px 0 6px" }}>
+                                                        <Tag color="geekblue" style={{ borderRadius: 999, padding: "0 10px" }}>{item.level}</Tag>
+                                                    </div>
+                                                )}
                                                 <div className={styles["job-location"]}><EnvironmentOutlined style={{ color: '#58aaab' }} />&nbsp;{getLocationLabel(item.location)}</div>
-                                                <div><ThunderboltOutlined style={{ color: 'orange' }} />&nbsp;{(item.salary + "")?.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ</div>
+                                                <div>
+                                                    <ThunderboltOutlined style={{ color: 'orange' }} />&nbsp;
+                                                    {(() => {
+                                                        const fmt = (v) => ("" + (v ?? 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                                                        const min = item?.salaryMin;
+                                                        const max = item?.salaryMax;
+                                                        if (min == null && max == null) return 'Thoả thuận';
+                                                        if (min === max) return `${fmt(min)} đ`;
+                                                        return `${fmt(min)} — ${fmt(max)} đ`;
+                                                    })()}
+                                                </div>
+                                                
                                             </div>
                                         </div>
 

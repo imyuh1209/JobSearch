@@ -1,6 +1,6 @@
 .card-job-section {
-    padding: 20px;
-    background-color: #f9f9f9;
+    padding: 24px;
+    background: #f7faff;
 }
 
 .job-content {
@@ -25,13 +25,20 @@
 .card-job-content {
     display: flex;
     align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 6px 24px rgba(18, 38, 63, 0.06);
 }
 
 .card-job-left img {
-    width: 60px;
-    height: 60px;
+    width: 90px;
+    height: 90px;
     object-fit: contain;
-    border-radius: 5px;
+    border-radius: 10px;
+    background: #f6f8fb;
+    padding: 8px;
 }
 
 .card-job-right {
@@ -39,9 +46,9 @@
 }
 
 .job-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
+    font-size: 19px;
+    font-weight: 600;
+    color: #1f2430;
     cursor: pointer;
 }
 
@@ -52,7 +59,7 @@
 .job-location,
 .job-updatedAt {
     font-size: 14px;
-    color: #666;
+    color: #4b5563;
 }
 
 .job-location svg,

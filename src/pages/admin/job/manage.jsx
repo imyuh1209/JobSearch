@@ -1,7 +1,6 @@
 import React from 'react';
 import { Tabs } from 'antd';
 import JobPage from './job';
-import SkillPage from './skill';
 
 const ManagePage = () => {
     const items = [
@@ -9,11 +8,6 @@ const ManagePage = () => {
             key: 'jobs',
             label: 'Quản lý Jobs',
             children: <JobPage />,
-        },
-        {
-            key: 'skills',
-            label: 'Quản lý Skills',
-            children: <SkillPage />,
         },
     ];
 
@@ -24,4 +18,4 @@ const ManagePage = () => {
     );
 };
 
-export default ManagePage; 
+export default ManagePage;

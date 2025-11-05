@@ -13,7 +13,7 @@ const LoginPage = () => {
 
     const validateUsernameOrEmail = (_, value) => {
         const trimmed = (value || "").trim();
-        if (!trimmed) return Promise.reject('Vui lòng nhập email hoặc tên đăng nhập!');
+        if (!trimmed) return Promise.reject('Vui lòng nhập email!');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (emailRegex.test(trimmed) || trimmed.length >= 3) return Promise.resolve();
         return Promise.reject('Email không hợp lệ hoặc tên đăng nhập quá ngắn!');
@@ -100,11 +100,11 @@ const LoginPage = () => {
                     onFinish={onFinish}
                 >
                     <Form.Item
-                        label="Email hoặc tên đăng nhập"
+                        label="Email đăng nhập"
                         name="username"
                         rules={[{ validator: validateUsernameOrEmail }]}
                     >
-                        <Input placeholder="Nhập email hoặc tên đăng nhập" />
+                        <Input placeholder="Nhập email" />
                     </Form.Item>
 
                     <Form.Item label="Mật khẩu" name="password"

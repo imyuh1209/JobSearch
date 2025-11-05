@@ -22,6 +22,7 @@ import {
   ShareAltOutlined,
   StarOutlined,
   ThunderboltFilled,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
@@ -30,6 +31,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ApplyModal from "../../components/client/modal/apply.modal";
 import { callFetchJobById } from "../../services/api.service";
+import { getLocationLabel } from "../../config/utils";
 import styles from "../../styles/client.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { HeartOutlined, HeartFilled } from "@ant-design/icons";
@@ -129,8 +131,12 @@ const toggleSave = async () => {
   }, [id]);
 
   const salaryText = useMemo(() => {
-    const s = jobDetail?.salary ?? 0;
-    return `${(s + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")} đ`;
+    const fmt = (n) => `${(Number(n || 0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")} đ`;
+    const min = jobDetail?.salaryMin;
+    const max = jobDetail?.salaryMax;
+    if (min == null && max == null) return 'Thoả thuận';
+    if (min === max) return fmt(min);
+    return `${fmt(min)} — ${fmt(max)}`;
   }, [jobDetail]);
 
   const updatedText = useMemo(() => {
@@ -162,6 +168,48 @@ const toggleSave = async () => {
     if (!t) return "";
     const d = parseDate(t);
     return d.isValid() ? d.fromNow() : "";
+  }, [jobDetail]);
+
+  // Tuyển dụng: hiển thị khoảng thời gian startDate — endDate (nếu có)
+  const recruitmentText = useMemo(() => {
+    if (!jobDetail) return "";
+    const fmt = (val) => {
+      if (!val) return null;
+      if (typeof val === "number") {
+        const d = val < 1e12 ? dayjs(val * 1000) : dayjs(val);
+        return d.isValid() ? d.format("DD/MM/YYYY") : null;
+      }
+      if (typeof val === "string") {
+        const num = Number(val);
+        if (!Number.isNaN(num)) {
+          const d = num < 1e12 ? dayjs(num * 1000) : dayjs(num);
+          return d.isValid() ? d.format("DD/MM/YYYY") : null;
+        }
+        const d = dayjs(val);
+        return d.isValid() ? d.format("DD/MM/YYYY") : null;
+      }
+      const d = dayjs(val);
+      return d.isValid() ? d.format("DD/MM/YYYY") : null;
+    };
+
+    const startCandidates = [
+      jobDetail?.startDate,
+      jobDetail?.postedDate,
+      jobDetail?.publishedAt,
+      jobDetail?.createdAt,
+    ].filter(Boolean);
+    const endCandidates = [
+      jobDetail?.endDate,
+      jobDetail?.deadline,
+      jobDetail?.closingDate,
+      jobDetail?.expiredAt,
+    ].filter(Boolean);
+
+    const start = fmt(startCandidates[0]);
+    const end = fmt(endCandidates[0]);
+    if (start && end) return `Tuyển từ ${start} — ${end}`;
+    if (start) return `Bắt đầu tuyển: ${start}`;
+    return "Đang cập nhật";
   }, [jobDetail]);
 
   const companyLogo = useMemo(() => {
@@ -256,10 +304,13 @@ const toggleSave = async () => {
                     </div>
                     <div style={metaItemStyle}>
                       <EnvironmentOutlined style={{ color: "#58aaab" }} />
-                      <Text>{jobDetail?.location || "Không xác định"}</Text>
+                      <Text>{getLocationLabel(jobDetail?.location)}</Text>
                     </div>
                     <div style={metaItemStyle}>
-                      <HistoryOutlined />
+                      <CalendarOutlined />
+                      <Text>{recruitmentText}</Text>
+                    </div>
+                    <div style={metaItemStyle}>
                       <Text>{updatedText}</Text>
                     </div>
                   </Space>

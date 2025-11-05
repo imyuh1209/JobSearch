@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Space, Popconfirm, message, Button, Input, Form, Tag } from "antd";
+import { Table, Space, Popconfirm, message, Button, Input, InputNumber, Form, Tag } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { fetchAllJobAPI, callDeleteJob } from "../../../services/api.service";
 import ModalJob from "../../../components/admin/job/modal.job";
@@ -9,7 +9,7 @@ const JobPage = () => {
     const [jobs, setJobs] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
     const [meta, setMeta] = useState({ page: 1, pageSize: 10, total: 0 });
-    const [filters, setFilters] = useState({ name: '', salary: '' });
+    const [filters, setFilters] = useState({ name: '', salaryMin: null, salaryMax: null });
 
     // State để mở Modal
     const [openModal, setOpenModal] = useState(false);
@@ -17,7 +17,7 @@ const JobPage = () => {
     const [form] = Form.useForm();
 
     useEffect(() => {
-        FetchAllJobs(1, meta.pageSize, { name: '', salary: '' });
+        FetchAllJobs(1, meta.pageSize, { name: '', salaryMin: null, salaryMax: null });
     }, []); // Chỉ gọi một lần khi component mount
 
     const buildQuery = (page, pageSize, searchFilters) => {
@@ -28,10 +28,17 @@ const JobPage = () => {
         if (searchFilters.name) {
             filterStr = `name ~ '${searchFilters.name}'`;
         }
-        if (searchFilters.salary) {
-            filterStr += searchFilters.name ?
-                ` and salary ~ '${searchFilters.salary}'` :
-                `salary ~ '${searchFilters.salary}'`;
+        // Lọc theo khoảng lương (giao nhau):
+        //  - Nếu có ngưỡng tối thiểu mong muốn: job.salaryMax >= desiredMin
+        //  - Nếu có ngưỡng tối đa mong muốn: job.salaryMin <= desiredMax
+        const { salaryMin, salaryMax } = searchFilters || {};
+        const desiredMin = Number(salaryMin);
+        const desiredMax = Number(salaryMax);
+        if (!Number.isNaN(desiredMin) && salaryMin !== null && salaryMin !== undefined && salaryMin !== '') {
+            filterStr += filterStr ? ` and salaryMax >= ${desiredMin}` : `salaryMax >= ${desiredMin}`;
+        }
+        if (!Number.isNaN(desiredMax) && salaryMax !== null && salaryMax !== undefined && salaryMax !== '') {
+            filterStr += filterStr ? ` and salaryMin <= ${desiredMax}` : `salaryMin <= ${desiredMax}`;
         }
 
         if (filterStr) {
@@ -81,7 +88,7 @@ const JobPage = () => {
 
     const handleReset = () => {
         form.resetFields();
-        const emptyFilters = { name: '', salary: '' };
+        const emptyFilters = { name: '', salaryMin: null, salaryMax: null };
         setFilters(emptyFilters);
         FetchAllJobs(1, meta.pageSize, emptyFilters);
     };
@@ -119,12 +126,19 @@ const JobPage = () => {
             sorter: true,
         },
         {
-            title: "Mức lương",
-            dataIndex: "salary",
+            title: "Lương (từ–đến)",
+            key: "salaryRange",
             sorter: true,
-            render: (salary) => {
-                const str = "" + salary;
-                return <>{str?.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ</>
+            render: (_, record) => {
+                const fmt = (val) => ("" + (val ?? 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                const { salaryMin, salaryMax } = record || {};
+                if (salaryMin == null && salaryMax == null) {
+                    return <>Thoả thuận</>;
+                }
+                if (salaryMin === salaryMax) {
+                    return <>{fmt(salaryMin)} đ</>;
+                }
+                return <>{fmt(salaryMin)} — {fmt(salaryMax)} đ</>;
             }
         },
         {
@@ -208,15 +222,18 @@ const JobPage = () => {
                 <Form.Item name="name" label="Name">
                     <Input placeholder="Tìm theo tên" allowClear />
                 </Form.Item>
-                <Form.Item name="salary" label="Salary">
-                    <Input placeholder="Tìm theo mức lương" allowClear />
+                <Form.Item name="salaryMin" label="Lương từ">
+                    <InputNumber min={0} step={1000000} placeholder="Tối thiểu" style={{ width: 140 }} />
+                </Form.Item>
+                <Form.Item name="salaryMax" label="đến">
+                    <InputNumber min={0} step={1000000} placeholder="Tối đa" style={{ width: 140 }} />
                 </Form.Item>
                 <Form.Item>
                     <Space>
                         <Button type="primary" htmlType="submit">
                             Tìm kiếm
                         </Button>
-                        <Button onClick={handleReset}>Làm lại</Button>
+                        <Button onClick={handleReset}>Đặt lại</Button>
                     </Space>
                 </Form.Item>
             </Form>

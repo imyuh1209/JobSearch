@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Form, Input, Modal, message, InputNumber, Select, Row, Col, DatePicker } from 'antd';
+import { Form, Input, Modal, message, InputNumber, Select, Row, Col, DatePicker, Checkbox } from 'antd';
 import { callCreateJob, callUpdateJob, fetchAllCompanyAPI } from '../../../services/api.service';
 import { LOCATION_LIST } from '../../../config/utils';
 import dayjs from 'dayjs';
@@ -9,6 +9,7 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
     const [loading, setLoading] = useState(false);
     // const [skills, setSkills] = useState([]);
     const [companies, setCompanies] = useState([]);
+    const negotiable = Form.useWatch('salaryNegotiable', form);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,13 +27,14 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
 
     useEffect(() => {
         if (dataInit) {
-            const { startDate, endDate, company } = dataInit;
+            const { startDate, endDate, company, salaryMin, salaryMax } = dataInit;
 
             form.setFieldsValue({
                 ...dataInit,
                 company: company?.id,
                 startDate: startDate ? dayjs(startDate) : null,
                 endDate: endDate ? dayjs(endDate) : null,
+                salaryNegotiable: (salaryMin == null && salaryMax == null) ? true : false,
             });
         }
     }, [dataInit]);
@@ -51,6 +53,14 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
             startDate: values.startDate?.startOf('day').toDate() || null,
             endDate: values.endDate?.startOf('day').toDate() || null,
         };
+
+        // Nếu chọn lương thoả thuận thì bỏ giá trị min/max
+        if (values.salaryNegotiable) {
+            payload.salaryMin = null;
+            payload.salaryMax = null;
+        }
+        // Không cần gửi cờ UI lên backend
+        delete payload.salaryNegotiable;
 
         try {
             const apiCall = dataInit?.id
@@ -91,7 +101,7 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
                 name="jobForm"
                 onFinish={onFinish}
                 preserve={false}
-                initialValues={{ active: true }}
+                initialValues={{ active: true, salaryNegotiable: false }}
             >
                 <Row gutter={[20, 20]}>
                     <Col span={24} md={12}>
@@ -174,17 +184,47 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
 
                     <Col span={24} md={8}>
                         <Form.Item
-                            label="Mức lương"
-                            name="salary"
-                            rules={[{ required: true, message: 'Vui lòng nhập mức lương!' }]}
+                            label="Lương từ"
+                            name="salaryMin"
+                            rules={[{ required: true, message: 'Vui lòng nhập lương tối thiểu!' }]}
                         >
                             <InputNumber
                                 style={{ width: '100%' }}
                                 formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                 parser={(val) => val.replace(/\D/g, '')}
                                 addonAfter="đ"
-                                placeholder="Nhập mức lương"
+                                placeholder="Nhập lương tối thiểu"
+                                min={0}
+                                step={1000000}
+                                disabled={negotiable}
                             />
+                        </Form.Item>
+                    </Col>
+
+                    <Col span={24} md={8}>
+                        <Form.Item
+                            label="đến"
+                            name="salaryMax"
+                            rules={[{ required: true, message: 'Vui lòng nhập lương tối đa!' }]}
+                        >
+                            <InputNumber
+                                style={{ width: '100%' }}
+                                formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                parser={(val) => val.replace(/\D/g, '')}
+                                addonAfter="đ"
+                                placeholder="Nhập lương tối đa"
+                                min={0}
+                                step={1000000}
+                                disabled={negotiable}
+                            />
+                        </Form.Item>
+                    </Col>
+
+                    <Col span={24} md={8}>
+                        <Form.Item name="salaryNegotiable" label="Lương thoả thuận" valuePropName="checked">
+                            <Checkbox>
+                                Để trống dải lương và hiển thị "Thoả thuận"
+                            </Checkbox>
                         </Form.Item>
                     </Col>
 

@@ -74,15 +74,14 @@ const callFetchJobById = (id) => {
     return axios.get(URL_BACKEND)
 }
 
-const registerUserAPI = (name, email, password, gender, address, age) => {
+const registerUserAPI = (name, email, password, gender, address) => {
     const URL_BACKEND = "/api/v1/auth/register";
     const data = {
         name: name,
         email: email,
         password: password,
         gender: gender,
-        address: address,
-        age: age
+        address: address
     }
     return axios.post(URL_BACKEND, data)
 }
@@ -139,14 +138,17 @@ const callUpdateUser = (id, data) => {
     const URL_BACKEND = "/api/v1/users";
     // Ép kiểu và chuẩn hóa dữ liệu trước khi gửi
     const safeId = Number(id);
+    const roleId = data?.role?.id != null ? Number(data.role.id) : undefined;
     const payload = {
         id: Number.isFinite(safeId) ? safeId : undefined,
         name: (data.name ?? "").trim(),
         email: data.email || "",
         gender: data.gender || "MALE",
         address: data.address || "",
-        // Gửi role nếu có
-        ...(data.role?.id ? { role: { id: Number(data.role.id) } } : {})
+        phone: data.phone || "",
+        // Gửi cả hai định dạng role để tương thích backend
+        ...(roleId ? { roleId } : {}),
+        ...(roleId ? { role: { id: roleId } } : {}),
     };
     // Chỉ thêm age khi người dùng cung cấp
     if (data.age != null && Number.isFinite(Number(data.age)) && Number(data.age) > 0) {
