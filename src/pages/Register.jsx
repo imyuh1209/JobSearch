@@ -62,17 +62,17 @@ const RegisterPage = () => {
             justifyContent: "center",
             alignItems: "center",
             height: "100vh",  // Chiều cao full màn hình
-            backgroundColor: "#f1f5f9"
+            backgroundColor: "var(--bg-app)"
         }}>
             <div style={{
                 width: "400px",
                 padding: "20px",
                 borderRadius: "8px",
-                backgroundColor: "#fff",
+                backgroundColor: "var(--color-bg)",
                 boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
             }}>
                 <div style={{ textAlign: "center", marginBottom: "20px" }}>
-                    <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "#121212" }}>Đăng Ký Tài Khoản</h2>
+                    <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "var(--color-text)" }}>Đăng Ký Tài Khoản</h2>
                     <Divider />
                 </div>
                 <Form

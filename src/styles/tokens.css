@@ -1,0 +1,92 @@
+:root {
+  /* Colors */
+  --color-primary: #1677ff;
+  --color-primary-hover: #4096ff;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-danger: #ff4d4f;
+  --color-text: #1f1f1f;
+  --color-text-secondary: #595959;
+  --color-border: #d9d9d9;
+  --color-bg: #ffffff;
+  --color-bg-soft: #f6f8fb;
+
+  /* Spacing */
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* Radius */
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-round: 999px;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-size-12: 12px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --line-140: 1.4;
+  --line-150: 1.5;
+  --line-160: 1.6;
+
+  /* Shadows */
+  --shadow-soft: 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-medium: 0 4px 12px rgba(0,0,0,0.08);
+
+  /* App background */
+  --bg-app: var(--color-bg-soft);
+
+  /* Component emphasis */
+  --menu-hover-bg: rgba(24, 144, 255, 0.08);
+  --menu-selected-bg: rgba(24, 144, 255, 0.16);
+}
+
+html.theme-dark {
+  --color-primary: #1677ff; /* giữ nguyên để nhận diện thương hiệu */
+  --color-primary-hover: #3e8cff;
+  --color-success: #3cb371;
+  --color-warning: #e3a008;
+  --color-danger: #ff6b6b;
+  --color-text: #e6e6e6;
+  --color-text-secondary: #b3b3b3;
+  --color-border: #303030;
+  --color-bg: #141414;
+  --color-bg-soft: #0f0f12;
+
+  --shadow-soft: 0 2px 6px rgba(0,0,0,0.35);
+  --shadow-medium: 0 4px 12px rgba(0,0,0,0.45);
+
+  --bg-app: var(--color-bg-soft);
+
+  /* Component emphasis (dark) */
+  --menu-hover-bg: rgba(255, 255, 255, 0.06);
+  --menu-selected-bg: rgba(22, 119, 255, 0.22);
+}
+
+/* Global usage */
+html, body {
+  background: var(--bg-app);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.filter-grid .ant-form-item-label > label {
+  color: var(--color-text-secondary);
+}
+.filter-grid .ant-form-item {
+  margin-bottom: var(--space-6);
+}
+.job-card .ant-card-cover {
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-6);
+}

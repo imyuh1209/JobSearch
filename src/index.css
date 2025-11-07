@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--bg-app);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,12 +15,12 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--color-primary);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--color-primary-hover);
 }
 
 body {
@@ -59,20 +59,17 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--color-text);
+    background-color: var(--bg-app);
   }
 
   a:hover {
-    color: #747bff;
+    color: var(--color-primary-hover);
   }
 
   button {
-    background-color: #f9f9f9;
+    background-color: var(--color-bg-soft);
   }
-}
-:root {
-  --bg-app: #f6f8fb;
 }
 
 html, body, #root {
@@ -82,32 +79,32 @@ html, body, #root {
 body {
   margin: 0;
   background: var(--bg-app);
-  color: #1f2430;
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Highlight văn bản xám dịu mắt */
 ::selection {
-  background: #e5e7eb; /* gray-200 */
-  color: #111827;      /* gray-900 */
+  background: var(--color-bg-soft);
+  color: var(--color-text);
 }
 
 /* Khung chọn (input/select) hover/focus với màu nhấn xanh nhẹ */
 .ant-input:hover,
 .ant-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
 }
 
 .ant-select-focused .ant-select-selector,
 .ant-select-selector:hover {
-  border-color: #3b82f6 !important;
+  border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
 }
 
 /* Card hover nhẹ, nền xám rất nhạt để dễ nhìn */
 .ant-card:hover {
-  background: #f7f9fc;
-  box-shadow: 0 6px 20px rgba(17, 24, 39, 0.06);
+  background: var(--color-bg-soft);
+  box-shadow: var(--shadow-soft);
 }

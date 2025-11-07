@@ -2,11 +2,11 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #fff;
+    background-color: var(--color-bg);
 }
 
 .detail-job-section {
-    background: #f9f9f9;
+    background: var(--color-bg-soft);
     padding: 20px;
     border-radius: 8px;
 }
@@ -14,12 +14,12 @@
 .header {
     font-size: 24px;
     font-weight: bold;
-    color: #333;
+    color: var(--color-text);
     margin-bottom: 10px;
 }
 
 .location {
-    color: #666;
+    color: var(--color-text-secondary);
     margin-bottom: 20px;
 }
 
@@ -28,9 +28,9 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background: #fff;
+    background: var(--color-bg);
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -42,7 +42,7 @@
 .company div {
     font-size: 18px;
     font-weight: 600;
-    color: #444;
+    color: var(--color-text);
     text-align: center;
 }
 
@@ -56,7 +56,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-soft);
     border-radius: 8px;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
 }
@@ -98,6 +98,6 @@
 }
 
 .job-location {
-    color: #666;
+    color: var(--color-text-secondary);
     margin-bottom: 5px;
 }

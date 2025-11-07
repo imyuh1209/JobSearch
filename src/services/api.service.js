@@ -287,12 +287,11 @@ const callCreateResume = (urlCV, jobId, email, userId) => {
         url: urlCV,
         email: email,
         status: "PENDING",
-        user: {
-            "id": userId
-        },
-        job: {
-            "id": jobId
-        }
+        user: { id: userId },
+    };
+    // Chỉ đính kèm job khi có jobId hợp lệ
+    if (jobId) {
+        data.job = { id: jobId };
     }
     return axios.post(URL_BACKEND, data);
 }
@@ -301,6 +300,24 @@ const callFetchResumeByUser = () => {
     const URL_BACKEND = "/api/v1/resumes/by-user";
     return axios.post(URL_BACKEND);
 }
+
+// New Resume endpoints: split uploads vs applications
+const listMyUploads = () => {
+    const URL_BACKEND = "/api/v1/resumes/my-uploads";
+    return axios.get(URL_BACKEND);
+};
+
+// Application history for current user (GET variant)
+const listMyApplications = () => {
+    const URL_BACKEND = "/api/v1/resumes/by-user";
+    return axios.get(URL_BACKEND);
+};
+
+// Apply job using a saved resume
+const applyJob = (jobId, resumeId) => {
+    const URL_BACKEND = `/api/v1/jobs/${jobId}/apply`;
+    return axios.post(URL_BACKEND, { resumeId });
+};
 
 // Subscriber APIs
 const callCreateSubscriber = (data) => {
@@ -326,6 +343,59 @@ const callUnsaveByJobId = (jobId) => axios.delete(`/api/v1/saved-jobs/${jobId}?b
 // Kiểm tra trạng thái đã lưu theo jobId
 const callIsSavedJob = (jobId) => axios.get(`/api/v1/saved-jobs/is-saved?jobId=${jobId}`);
 
+// ===== Banner APIs =====
+// Public endpoint to fetch active banners for homepage
+const callFetchHomeBanners = () => {
+    const URL_BACKEND = "/api/v1/banners/home";
+    return axios.get(URL_BACKEND);
+};
+
+// Admin endpoints for managing banners
+const fetchAllBannerAPI = (query) => {
+    const URL_BACKEND = `/api/v1/banners?${query}`;
+    return axios.get(URL_BACKEND);
+};
+
+const callCreateBanner = (data) => {
+    const URL_BACKEND = "/api/v1/banners";
+    return axios.post(URL_BACKEND, data);
+};
+
+const callUpdateBanner = (id, data) => {
+    const URL_BACKEND = "/api/v1/banners";
+    return axios.put(URL_BACKEND, { ...data, id });
+};
+
+const callDeleteBanner = (id) => {
+    const URL_BACKEND = `/api/v1/banners/${id}`;
+    return axios.delete(URL_BACKEND);
+};
+
+const callFetchBannerById = (id) => {
+    const URL_BACKEND = `/api/v1/banners/${id}`;
+    return axios.get(URL_BACKEND);
+};
+
+// Saved Search / Job Alerts APIs
+const createSavedSearch = (payload) => {
+    const URL_BACKEND = "/api/v1/saved-searches";
+    return axios.post(URL_BACKEND, payload);
+};
+
+const listSavedSearches = () => {
+    const URL_BACKEND = "/api/v1/saved-searches";
+    return axios.get(URL_BACKEND);
+};
+
+const deleteSavedSearch = (id) => {
+    const URL_BACKEND = `/api/v1/saved-searches/${id}`;
+    return axios.delete(URL_BACKEND);
+};
+
+const runAlert = (id) => {
+    const URL_BACKEND = `/api/v1/saved-searches/${id}/run-alert`;
+    return axios.post(URL_BACKEND);
+};
 
 
 export {
@@ -338,6 +408,7 @@ export {
     callCreateJob, callUpdateJob, callDeleteJob, fetchJobsByCompanyAPI, fetchJobsByCurrentCompanyAPI,
     // Resume APIs
     fetchAllResumeAPI, callDeleteResume, callUpdateResumeStatus, callFetchResumeById, callCreateResume, callFetchResumeByUser,
+    listMyUploads, listMyApplications, applyJob,
     callSendResumeStatusEmail,
     // Permission APIs
     fetchAllPermissionAPI, callCreatePermission, callUpdatePermission, callDeletePermission, callFetchPermissionById,
@@ -354,4 +425,16 @@ export {
   callUnsaveByJobId,
   callIsSavedJob,
   callChangePassword,
+  // Banner APIs
+  callFetchHomeBanners,
+  fetchAllBannerAPI,
+  callCreateBanner,
+  callUpdateBanner,
+  callDeleteBanner,
+  callFetchBannerById,
+  // Saved Search / Job Alerts
+  createSavedSearch,
+  listSavedSearches,
+  deleteSavedSearch,
+  runAlert,
 };

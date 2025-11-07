@@ -6,6 +6,7 @@ import {
   LoginOutlined,
   SearchOutlined,
   UserAddOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import { Input, Menu, notification, Dropdown, Space, Button, Avatar, Badge } from "antd";
 import { useContext, useState } from "react";
@@ -18,7 +19,7 @@ import { buildQuery } from "../../../config/utils";
 
 const { Search } = Input;
 
-const Header = () => {
+const Header = ({ isDarkTheme, onToggleTheme }) => {
   const { user, setUser } = useContext(AuthContext);
   const [current, setCurrent] = useState("home");
   const [keyword, setKeyword] = useState("");
@@ -68,6 +69,11 @@ const Header = () => {
   const authDropdownItems = [
     { label: <NavLink to="/account">Quản lý tài khoản</NavLink>, key: "account" },
     { label: <NavLink to="/account?tab=resume">Lịch sử ứng tuyển</NavLink>, key: "applications-history" },
+    { label: <NavLink to="/job-alerts">Job Alerts</NavLink>, key: "job-alerts" },
+    // Trang quản lý CV cá nhân
+    ...((user?.id)
+      ? [{ label: <NavLink to="/my-cv">CV cá nhân</NavLink>, key: "my-cv" }]
+      : []),
     // Admin pages based on role
     ...((user?.role?.name === 'SUPER_ADMIN' || user?.role?.name === 'Công ty' || user?.role?.name === 'Company')
       ? [{ label: <NavLink to="/admin">Trang quản trị</NavLink>, key: "admin" }]
@@ -116,8 +122,8 @@ const Header = () => {
     <>
       <header
         style={{
-          borderBottom: "1px solid #f0f0f0",
-          background: "#fff",
+          borderBottom: "1px solid var(--color-border)",
+          background: "var(--color-bg)",
           position: "sticky",
           top: 0,
           zIndex: 100,
@@ -156,7 +162,7 @@ const Header = () => {
                 style={{
                   fontSize: 18,
                   fontWeight: 600,
-                  color: "#1890ff",
+                  color: "var(--color-primary)",
                   letterSpacing: 0.2,
                 }}
               >
@@ -179,6 +185,16 @@ const Header = () => {
 
           {/* Right actions: login/register or welcome dropdown */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Theme toggle */}
+            <Button
+              type="text"
+              size="large"
+              shape="round"
+              aria-label="Toggle dark mode"
+              title={isDarkTheme ? "Tắt Dark Mode" : "Bật Dark Mode"}
+              onClick={onToggleTheme}
+              icon={<BulbOutlined style={{ fontSize: 18, color: isDarkTheme ? "#fadb14" : "#1677ff" }} />}
+            />
             {!user?.id ? (
               <Space>
                 <Link to="/login">
@@ -188,7 +204,7 @@ const Header = () => {
                     shape="round"
                     ghost
                     icon={<LoginOutlined style={{ fontSize: 18 }} />}
-                    style={{ borderColor: "#1677ff", color: "#1677ff" }}
+                    style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)" }}
                   >
                     Đăng nhập
                   </Button>
@@ -208,7 +224,7 @@ const Header = () => {
             ) : (
               <Dropdown menu={{ items: authDropdownItems }} trigger={["click"]}>
                 <Space style={{ cursor: "pointer" }}>
-                  <AliwangwangOutlined style={{ fontSize: 18, color: "#1677ff" }} />
+                  <AliwangwangOutlined style={{ fontSize: 18, color: "var(--color-primary)" }} />
                   <span>Welcome {user?.name}</span>
                   <Badge dot color="#52c41a" offset={[-2, 2]}>
                     <Avatar

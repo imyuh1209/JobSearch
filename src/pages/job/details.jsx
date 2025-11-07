@@ -130,6 +130,16 @@ const toggleSave = async () => {
     fetchJobDetail();
   }, [id]);
 
+  const refetchJobDetail = async () => {
+    try {
+      const res = await callFetchJobById(id);
+      const data = res?.data ?? res;
+      if (data?.id) setJobDetail(data);
+    } catch (e) {
+      console.error("Refetch job detail error:", e);
+    }
+  };
+
   const salaryText = useMemo(() => {
     const fmt = (n) => `${(Number(n || 0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")} đ`;
     const min = jobDetail?.salaryMin;
@@ -290,6 +300,7 @@ const toggleSave = async () => {
                     size="large"
                     icon={<ThunderboltFilled />}
                     onClick={() => setIsModalOpen(true)}
+                    disabled={!!jobDetail?.applied}
                   >
                     Ứng tuyển ngay
                   </Button>
@@ -332,7 +343,7 @@ const toggleSave = async () => {
 
                 {/* Description */}
                 <Divider />
-                <div style={{ color: "#1f2430" }}>
+                <div style={{ color: "var(--color-text)" }}>
                   {/* Giữ xuống dòng khi mô tả là text thường; nếu có HTML thì parse */}
                   {jobDetail?.description ? (
                     /<\/?[a-z][\s\S]*>/i.test(jobDetail.description)
@@ -398,7 +409,7 @@ const toggleSave = async () => {
               )}
               <Divider />
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Button block onClick={() => setIsModalOpen(true)} type="primary">
+                <Button block onClick={() => setIsModalOpen(true)} type="primary" disabled={!!jobDetail?.applied}>
                   Ứng tuyển ngay
                 </Button>
                 <Button block href={`/company/${jobDetail?.company?.id}`}>
@@ -415,6 +426,7 @@ const toggleSave = async () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         jobDetail={jobDetail}
+        onAppliedSuccess={refetchJobDetail}
       />
 
   <Button

@@ -6,7 +6,7 @@
 
 /* ===== Hero ===== */
 .company-hero {
-  background: linear-gradient(135deg, #f7faff 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--color-bg-soft) 0%, var(--color-bg) 100%);
   border-radius: 16px;
   box-shadow: 0 6px 28px rgba(18, 38, 63, 0.06);
   padding: 24px;
@@ -40,7 +40,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #4b5563;
+  color: var(--color-text-secondary);
 }
 
 /* ===== Description ===== */
@@ -48,7 +48,7 @@
   margin-top: 20px;
   border-radius: 16px;
   padding: 20px 24px;
-  background: #fff;
+  background: var(--color-bg);
   box-shadow: 0 6px 28px rgba(18, 38, 63, 0.06);
 }
 
@@ -62,7 +62,7 @@
 
 .company-desc__content p {
   margin: 0 0 10px;
-  color: #2a2f3a;
+  color: var(--color-text);
   line-height: 1.7;
 }
 
@@ -89,15 +89,19 @@
 }
 
 .job-card__cover {
-  height: 120px;
-  display: grid;
-  place-items: center;
-  background: #f6f8fb;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-soft);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .job-card__cover img {
-  max-width: 120px;
-  max-height: 80px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -114,7 +118,7 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  color: #4b5563;
+  color: var(--color-text-secondary);
 }
 
 .job-card__tags {

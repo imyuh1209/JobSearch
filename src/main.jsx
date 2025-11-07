@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import 'antd/dist/reset.css'; // Cho phiên bản mới của Ant Design
+import './styles/tokens.css'; // Biến CSS tokens & dark theme
 
 import App from './App.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -22,11 +23,15 @@ import ManagePage from './pages/admin/job/manage.jsx';
 import ResumePage from './pages/admin/resume.jsx';
 import PermissionPage from './pages/admin/permission.jsx';
 import RolePage from './pages/admin/role.jsx';
+import BannerAdminPage from './pages/admin/banner.jsx';
 import SavedJobsPage from "./pages/job/saved.jobs";
 import AccountPage from './pages/account/index.jsx';
 import PrivacyPage from './pages/static/privacy.jsx';
 import TermsPage from './pages/static/terms.jsx';
 import AboutPage from './pages/static/about.jsx';
+import StyleGuidePage from './pages/static/style.guide.jsx';
+import ManageMyCVPage from './pages/cv/manage.jsx';
+import JobAlertsPage from './pages/job/alerts.jsx';
 
 const router = createBrowserRouter([
   {
@@ -50,9 +55,20 @@ const router = createBrowserRouter([
       ,{ path: '/privacy', element: <PrivacyPage /> }
       ,{ path: '/terms', element: <TermsPage /> }
       ,{ path: '/about', element: <AboutPage /> }
+      ,{ path: '/style-guide', element: <StyleGuidePage /> }
+      ,{ path: '/my-cv', element: (
+        <PrivateRoute>
+          <ManageMyCVPage />
+        </PrivateRoute>
+      ) }
       ,{ path: '/account', element: (
         <PrivateRoute>
           <AccountPage />
+        </PrivateRoute>
+      ) }
+      ,{ path: '/job-alerts', element: (
+        <PrivateRoute>
+          <JobAlertsPage />
         </PrivateRoute>
       ) }
     ],
@@ -72,6 +88,7 @@ const router = createBrowserRouter([
       { path: 'resume', element: <PrivateRoute><ResumePage /></PrivateRoute> },
       { path: 'permission', element: <PrivateRoute><PermissionPage /></PrivateRoute> },
       { path: 'role', element: <PrivateRoute><RolePage /></PrivateRoute> },
+      { path: 'banner', element: <PrivateRoute><BannerAdminPage /></PrivateRoute> },
     ],
   },
 

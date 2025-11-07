@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Layout, Menu, Button, message, Dropdown, Space, Avatar } from 'antd';
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { MenuFoldOutlined, MenuUnfoldOutlined, BugOutlined, AppstoreOutlined, UserOutlined, ScheduleOutlined, AliwangwangOutlined, ApiOutlined, ExceptionOutlined, BankOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, BugOutlined, AppstoreOutlined, UserOutlined, ScheduleOutlined, AliwangwangOutlined, ApiOutlined, ExceptionOutlined, BankOutlined, PictureOutlined } from '@ant-design/icons';
 import { logoutUserAPI, getAccount } from '../../services/api.service';
 import { AuthContext } from '../context/auth.context';
 
@@ -68,6 +68,11 @@ const LayoutAdmin = () => {
         return hasModulePermission;
     };
 
+    const isSuperAdmin = () => {
+        const roleCode = user?.role?.code || user?.role?.name || "";
+        return roleCode === 'SUPER_ADMIN';
+    }
+
     const menuItems = [
         {
             label: <Link to='/admin'>Dashboard</Link>,
@@ -110,6 +115,12 @@ const LayoutAdmin = () => {
             key: '/admin/role',
             icon: <ExceptionOutlined />,
             show: hasPermission('ROLES')
+        },
+        {
+            label: <Link to='/admin/banner'>Banner</Link>,
+            key: '/admin/banner',
+            icon: <PictureOutlined />,
+            show: isSuperAdmin()
         },
     ].filter(item => item.show);
 

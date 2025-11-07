@@ -80,14 +80,22 @@ const ResumePage = () => {
     };
 
     const handleDeleteResume = async (id) => {
-        if (id) {
+        if (!id) return;
+        try {
             const res = await callDeleteResume(id);
-            if (res && +res.data.statusCode === 202) {
-                message.success("Xóa Resume thành công");
+            // axios custom interceptor trả về trực tiếp response.data
+            // Backend có thể trả statusCode hoặc status, hoặc success
+            const status = Number(res?.statusCode ?? res?.status ?? 0);
+            const ok = (status >= 200 && status < 300) || res?.success === true;
+            if (ok) {
+                message.success(res?.message || "Xóa Resume thành công");
                 FetchAllResumes(meta.page, meta.pageSize);
             } else {
-                message.error("Có lỗi xảy ra khi xóa Resume");
+                message.error(res?.message || "Có lỗi xảy ra khi xóa Resume");
             }
+        } catch (error) {
+            const errMsg = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Có lỗi xảy ra khi xóa Resume";
+            message.error(errMsg);
         }
     };
 
