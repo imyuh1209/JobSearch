@@ -1,7 +1,8 @@
 :root {
   /* Colors */
-  --color-primary: #1677ff;
-  --color-primary-hover: #4096ff;
+  --color-primary: #0077b6;
+  /* Sea Blue */
+  --color-primary-hover: #0050b3;
   --color-success: #52c41a;
   --color-warning: #faad14;
   --color-danger: #ff4d4f;
@@ -40,8 +41,8 @@
   --line-160: 1.6;
 
   /* Shadows */
-  --shadow-soft: 0 2px 6px rgba(0,0,0,0.06);
-  --shadow-medium: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   /* App background */
   --bg-app: var(--color-bg-soft);
@@ -52,7 +53,8 @@
 }
 
 html.theme-dark {
-  --color-primary: #1677ff; /* giữ nguyên để nhận diện thương hiệu */
+  --color-primary: #1677ff;
+  /* giữ nguyên để nhận diện thương hiệu */
   --color-primary-hover: #3e8cff;
   --color-success: #3cb371;
   --color-warning: #e3a008;
@@ -63,8 +65,8 @@ html.theme-dark {
   --color-bg: #141414;
   --color-bg-soft: #0f0f12;
 
-  --shadow-soft: 0 2px 6px rgba(0,0,0,0.35);
-  --shadow-medium: 0 4px 12px rgba(0,0,0,0.45);
+  --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.45);
 
   --bg-app: var(--color-bg-soft);
 
@@ -74,18 +76,21 @@ html.theme-dark {
 }
 
 /* Global usage */
-html, body {
+html,
+body {
   background: var(--bg-app);
   color: var(--color-text);
   font-family: var(--font-sans);
 }
 
-.filter-grid .ant-form-item-label > label {
+.filter-grid .ant-form-item-label>label {
   color: var(--color-text-secondary);
 }
+
 .filter-grid .ant-form-item {
   margin-bottom: var(--space-6);
 }
+
 .job-card .ant-card-cover {
   background: var(--color-bg-soft);
   border-radius: var(--radius-6);

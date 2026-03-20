@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Layout, Menu, Button, message, Dropdown, Space, Avatar } from 'antd';
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { MenuFoldOutlined, MenuUnfoldOutlined, BugOutlined, AppstoreOutlined, UserOutlined, ScheduleOutlined, AliwangwangOutlined, ApiOutlined, ExceptionOutlined, BankOutlined, PictureOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, BugOutlined, AppstoreOutlined, UserOutlined, ScheduleOutlined, AliwangwangOutlined, ApiOutlined, ExceptionOutlined, BankOutlined, PictureOutlined, BellOutlined } from '@ant-design/icons';
 import { logoutUserAPI, getAccount } from '../../services/api.service';
 import { AuthContext } from '../context/auth.context';
 
@@ -120,6 +120,12 @@ const LayoutAdmin = () => {
             label: <Link to='/admin/banner'>Banner</Link>,
             key: '/admin/banner',
             icon: <PictureOutlined />,
+            show: isSuperAdmin()
+        },
+        {
+            label: <Link to='/admin/notification'>Thông báo</Link>,
+            key: '/admin/notification',
+            icon: <BellOutlined />,
             show: isSuperAdmin()
         },
     ].filter(item => item.show);

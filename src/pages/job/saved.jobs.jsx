@@ -86,7 +86,7 @@ export default function SavedJobsPage() {
                     <span><EnvironmentOutlined /> {it.location || "Toàn quốc"}</span>
                     <span>
                       <ThunderboltOutlined style={{ color: "orange" }} /> {
-                        (it.salaryMin == null && it.salaryMax == null)
+                        ((it.salaryMin == null && it.salaryMax == null) || (it.salaryMin === 0 && it.salaryMax === 0))
                           ? 'Thoả thuận'
                           : (it.salaryMin === it.salaryMax
                               ? currency(it.salaryMin)

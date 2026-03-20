@@ -203,7 +203,7 @@ const ClientCompanyDetailPage = () => {
                             {(() => {
                               const min = job?.salaryMin;
                               const max = job?.salaryMax;
-                              if (min == null && max == null) return 'Thoả thuận';
+                              if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
                               return min === max ? currency(min) : `${currency(min)} — ${currency(max)}`;
                             })()}
                           </Text>

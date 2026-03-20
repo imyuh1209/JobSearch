@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Button, Descriptions, Drawer, Form, Select, message, notification, Space } from "antd";
 import dayjs from 'dayjs';
-import { callUpdateResumeStatus, callSendResumeStatusEmail } from "../../../services/api.service";
+import { callUpdateResumeStatus, callSendResumeStatusEmail, callFetchFile } from "../../../services/api.service";
 
 const { Option } = Select;
 
@@ -47,6 +47,29 @@ const ViewDetailResume = (props) => {
         }
     };
 
+    const handleViewCV = async (url, originalName) => {
+        if (!url) return;
+        try {
+            const blob = await callFetchFile(url, "resume");
+            const ext = originalName ? originalName.split('.').pop().toLowerCase() : '';
+            const isViewable = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+
+            if (isViewable) {
+                const fileURL = URL.createObjectURL(blob);
+                window.open(fileURL, '_blank');
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = originalName || url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } catch (error) {
+            message.error("Không thể tải file CV");
+        }
+    };
+
     useEffect(() => {
         if (dataInit) {
             form.setFieldValue("status", dataInit.status);
@@ -68,7 +91,7 @@ const ViewDetailResume = (props) => {
                     {dataInit?.url && (
                         <Button
                             type="primary"
-                            onClick={() => window.open(`${import.meta.env.VITE_BACKEND_URL}/storage/resume/${dataInit.url}`, '_blank')}
+                            onClick={() => handleViewCV(dataInit.url, dataInit?.originalName)}
                         >
                             Xem CV
                         </Button>

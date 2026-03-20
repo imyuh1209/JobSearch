@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import enUS from 'antd/lib/locale/en_US';
 import { UploadOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { callCreateResume, callUploadSingleFile, listMyUploads } from "../../../services/api.service";
+import { callCreateResume, callUploadSingleFile, listMyUploads, callFetchFile } from "../../../services/api.service";
 import { useContext } from "react";
 import { AuthContext } from "../../context/auth.context";
 
@@ -37,11 +37,34 @@ const ApplyModal = (props) => {
         fetchUploads();
     }, [isModalOpen, user?.id]);
 
+    const handleViewCV = async (url, originalName) => {
+        if (!url) return;
+        try {
+            const blob = await callFetchFile(url, "resume");
+            const ext = originalName ? originalName.split('.').pop().toLowerCase() : '';
+            const isViewable = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+
+            if (isViewable) {
+                const fileURL = URL.createObjectURL(blob);
+                window.open(fileURL, '_blank');
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = originalName || url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } catch (error) {
+            message.error("Không thể tải file CV");
+        }
+    };
+
     const columns = [
         { title: 'Tên file', dataIndex: 'originalName', render: (v) => v || '—' },
         { title: 'Ngày tạo', dataIndex: 'uploadedAt', render: (v) => v ? new Date(v).toLocaleString() : '—' },
-        { title: 'Xem', dataIndex: 'fileName', render: (name) => name ? (
-            <a href={`${import.meta.env.VITE_BACKEND_URL}/storage/resume/${name}`} target="_blank" rel="noreferrer">Xem</a>
+        { title: 'Xem', dataIndex: 'fileName', render: (name, record) => name ? (
+            <span style={{ cursor: "pointer", color: "blue" }} onClick={(e) => { e.stopPropagation(); handleViewCV(name, record.originalName); }}>Xem</span>
         ) : '—' },
     ];
 
@@ -136,6 +159,9 @@ const ApplyModal = (props) => {
                                         <div>
                                             <label>Chọn CV đã lưu</label>
                                             <Space direction="vertical" style={{ width: '100%', marginTop: 8 }}>
+                                                <Space style={{ justifyContent: 'flex-end', width: '100%' }}>
+                                                    <Button onClick={() => setUrlCV("")}>Bỏ chọn</Button>
+                                                </Space>
                                                 <Table
                                                     size="small"
                                                     rowKey={(r) => r.fileName}
@@ -143,7 +169,7 @@ const ApplyModal = (props) => {
                                                     columns={columns}
                                                     pagination={false}
                                                     onRow={(record) => ({
-                                                        onClick: () => setUrlCV(record.fileName)
+                                                        onClick: () => setUrlCV((prev) => prev === record.fileName ? "" : record.fileName)
                                                     })}
                                                     rowSelection={{
                                                         type: 'radio',

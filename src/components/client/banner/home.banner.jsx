@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Carousel, Card, Spin } from 'antd';
+import { motion } from 'framer-motion';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { callFetchHomeBanners } from '../../../services/api.service';
 
@@ -75,90 +76,95 @@ const HomeBannerCarousel = () => {
   }
 
   return (
-    <Card bodyStyle={{ padding: 0 }} style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
-      <Carousel autoplay dots ref={carouselRef}>
-        {banners.map((b) => {
-          const href = b?.link || '#';
-          const src = resolveBannerImageUrl(backend, b);
-          const title = b?.title || 'Banner';
-          return (
-            <a key={`${b.id || src || Math.random()}`} href={href} target="_blank" rel="noreferrer">
-              {src ? (
-                <img
-                  src={src}
-                  alt={title}
-                  style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }}
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-              ) : (
-                <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa' }}>
-                  {title}
-                </div>
-              )}
-            </a>
-          );
-        })}
-      </Carousel>
-      {banners.length > 1 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            right: 0,
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '0 8px',
-            pointerEvents: 'none'
-          }}
-          aria-hidden="false"
-        >
-          <button
-            type="button"
-            onClick={() => carouselRef.current?.prev?.()}
-            title="Banner trước"
-            aria-label="Banner trước"
+    <motion.div
+      animate={{ y: [0, -10, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <Card bodyStyle={{ padding: 0 }} style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', position: 'relative', boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
+        <Carousel autoplay dots ref={carouselRef}>
+          {banners.map((b) => {
+            const href = b?.link || '#';
+            const src = resolveBannerImageUrl(backend, b);
+            const title = b?.title || 'Banner';
+            return (
+              <a key={`${b.id || src || Math.random()}`} href={href} target="_blank" rel="noreferrer">
+                {src ? (
+                  <img
+                    src={src}
+                    alt={title}
+                    style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa' }}>
+                    {title}
+                  </div>
+                )}
+              </a>
+            );
+          })}
+        </Carousel>
+        {banners.length > 1 && (
+          <div
             style={{
-              pointerEvents: 'auto',
-              background: 'rgba(0,0,0,0.45)',
-              border: 'none',
-              color: '#fff',
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+              position: 'absolute',
+              top: '50%',
+              left: 0,
+              right: 0,
+              transform: 'translateY(-50%)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
+              justifyContent: 'space-between',
+              padding: '0 8px',
+              pointerEvents: 'none'
             }}
+            aria-hidden="false"
           >
-            <LeftOutlined />
-          </button>
-          <button
-            type="button"
-            onClick={() => carouselRef.current?.next?.()}
-            title="Banner tiếp theo"
-            aria-label="Banner tiếp theo"
-            style={{
-              pointerEvents: 'auto',
-              background: 'rgba(0,0,0,0.45)',
-              border: 'none',
-              color: '#fff',
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <RightOutlined />
-          </button>
-        </div>
-      )}
-    </Card>
+            <button
+              type="button"
+              onClick={() => carouselRef.current?.prev?.()}
+              title="Banner trước"
+              aria-label="Banner trước"
+              style={{
+                pointerEvents: 'auto',
+                background: 'rgba(0,0,0,0.45)',
+                border: 'none',
+                color: '#fff',
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <LeftOutlined />
+            </button>
+            <button
+              type="button"
+              onClick={() => carouselRef.current?.next?.()}
+              title="Banner tiếp theo"
+              aria-label="Banner tiếp theo"
+              style={{
+                pointerEvents: 'auto',
+                background: 'rgba(0,0,0,0.45)',
+                border: 'none',
+                color: '#fff',
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <RightOutlined />
+            </button>
+          </div>
+        )}
+      </Card>
+    </motion.div>
   );
 };
 

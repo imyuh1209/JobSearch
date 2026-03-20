@@ -34,7 +34,7 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
                 company: company?.id,
                 startDate: startDate ? dayjs(startDate) : null,
                 endDate: endDate ? dayjs(endDate) : null,
-                salaryNegotiable: (salaryMin == null && salaryMax == null) ? true : false,
+                salaryNegotiable: ((salaryMin == null && salaryMax == null) || (salaryMin === 0 && salaryMax === 0)) ? true : false,
             });
         }
     }, [dataInit]);
@@ -186,7 +186,7 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
                         <Form.Item
                             label="Lương từ"
                             name="salaryMin"
-                            rules={[{ required: true, message: 'Vui lòng nhập lương tối thiểu!' }]}
+                            rules={[{ required: !negotiable, message: 'Vui lòng nhập lương tối thiểu!' }]}
                         >
                             <InputNumber
                                 style={{ width: '100%' }}
@@ -205,7 +205,7 @@ const ModalJob = ({ openModal, setOpenModal, dataInit, setDataInit, reloadTable 
                         <Form.Item
                             label="đến"
                             name="salaryMax"
-                            rules={[{ required: true, message: 'Vui lòng nhập lương tối đa!' }]}
+                            rules={[{ required: !negotiable, message: 'Vui lòng nhập lương tối đa!' }]}
                         >
                             <InputNumber
                                 style={{ width: '100%' }}

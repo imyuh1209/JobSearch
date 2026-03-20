@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useContext } from 'react';
 import { Card, Upload, Button, Space, Table, Tag, Empty, message } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
-import { callUploadSingleFile, callCreateResume, listMyUploads, callDeleteResume } from '../../services/api.service';
+import { callUploadSingleFile, callCreateResume, listMyUploads, callDeleteResume, callFetchFile } from '../../services/api.service';
 import { AuthContext } from '../../components/context/auth.context';
 
 const ACCEPTED_TYPES = [
@@ -90,7 +90,7 @@ const ManageMyCVPage = () => {
             type: file.type,
             size: file.size,
             uploadedAt: new Date().toISOString(),
-            urlStorage: `/storage/resume/${uploadedName}`,
+            urlStorage: `/api/v1/files?folder=resume&fileName=${uploadedName}`,
           };
           const next = [item, ...list];
           persist(next);
@@ -159,15 +159,38 @@ const ManageMyCVPage = () => {
     }
   };
 
+  const handleViewCV = async (url, originalName) => {
+    if (!url) return;
+    try {
+      const blob = await callFetchFile(url, "resume");
+      const ext = originalName ? originalName.split('.').pop().toLowerCase() : '';
+      const isViewable = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+
+      if (isViewable) {
+          const fileURL = URL.createObjectURL(blob);
+          window.open(fileURL, '_blank');
+      } else {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = originalName || url;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
+    } catch (error) {
+      message.error("Không thể tải file CV");
+    }
+  };
+
   const columns = [
     { title: 'STT', key: 'index', width: 70, align: 'center', render: (_, __, i) => i + 1 },
     { title: 'Tên file', dataIndex: 'originalName', ellipsis: true },
     { title: 'Định dạng', dataIndex: 'type', width: 140, align: 'center',
       render: (t, r) => <Tag color="geekblue">{formatType(t, r.originalName)}</Tag> },
     { title: 'Ngày tải', dataIndex: 'uploadedAt', render: (v) => new Date(v).toLocaleString() },
-    { title: 'Xem', dataIndex: 'fileName', render: (name) => (
+    { title: 'Xem', dataIndex: 'fileName', render: (name, record) => (
       name ? (
-        <a href={`${import.meta.env.VITE_BACKEND_URL}/storage/resume/${name}`} target="_blank">Xem CV</a>
+        <span style={{ cursor: "pointer", color: "blue" }} onClick={() => handleViewCV(name, record.originalName)}>Xem CV</span>
       ) : '—'
     ) },
     { title: 'Thao tác', key: 'actions', render: (_, r) => (

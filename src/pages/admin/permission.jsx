@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Space, Popconfirm, message, Button, Input, Form, Select, Tag, notification } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { fetchAllPermissionAPI, callDeletePermission } from "../../services/api.service";
+import { fetchAllPermissionAPI, callDeletePermission, callCreatePermission } from "../../services/api.service";
 import ModalPermission from "../../components/admin/permission/modal.permission";
 import dayjs from 'dayjs';
 import { ALL_MODULES } from "../../config/permissions";
@@ -149,6 +149,7 @@ const PermissionPage = () => {
             { name: 'Delete a resume', apiPath: '/api/v1/resumes/{id}', method: 'DELETE', module: 'RESUME' },
             { name: 'Get my resumes', apiPath: '/api/v1/resumes/by-user', method: 'POST', module: 'RESUME' },
             { name: 'Count resumes by job', apiPath: '/api/v1/resumes/count-by-job/{jobId}', method: 'GET', module: 'RESUME' },
+            { name: 'Send resume status email', apiPath: '/api/v1/resumes/status-email', method: 'POST', module: 'RESUME' },
             // Users
             { name: 'Create a user', apiPath: '/api/v1/users', method: 'POST', module: 'USER' },
             { name: 'Update a user', apiPath: '/api/v1/users', method: 'PUT', module: 'USER' },
@@ -184,6 +185,13 @@ const PermissionPage = () => {
             { name: 'Refresh token (cookie/header)', apiPath: '/api/v1/auth/refresh', method: 'GET', module: 'AUTH' },
             { name: 'Refresh token (body)', apiPath: '/api/v1/auth/refresh', method: 'POST', module: 'AUTH' },
             { name: 'Logout', apiPath: '/api/v1/auth/logout', method: 'POST', module: 'AUTH' },
+            // Notifications
+            { name: 'Create a notification', apiPath: '/api/v1/notifications', method: 'POST', module: 'NOTIFICATION' },
+            { name: 'Get my notifications', apiPath: '/api/v1/notifications', method: 'GET', module: 'NOTIFICATION' },
+            { name: 'Count unread notifications', apiPath: '/api/v1/notifications/count-unread', method: 'GET', module: 'NOTIFICATION' },
+            { name: 'Mark notification as read', apiPath: '/api/v1/notifications/{id}/read', method: 'PUT', module: 'NOTIFICATION' },
+            { name: 'Get all notifications (Admin)', apiPath: '/api/v1/notifications/admin', method: 'GET', module: 'NOTIFICATION' },
+            { name: 'Delete a notification', apiPath: '/api/v1/notifications/{id}', method: 'DELETE', module: 'NOTIFICATION' },
         ];
     };
 

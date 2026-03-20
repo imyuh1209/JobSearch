@@ -1,6 +1,9 @@
 import Header from "./components/client/layout/header";
 import Footer from "./components/client/layout/footer";
-import { Outlet } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "./components/common/PageTransition";
+import IntroScreen from "./components/common/IntroScreen";
+import { Outlet, useLocation } from "react-router-dom";
 import { ConfigProvider, theme as antdTheme } from "antd";
 import { getAccount } from "./services/api.service";
 import { useContext, useEffect, useState } from "react";
@@ -8,11 +11,18 @@ import { AuthContext } from "./components/context/auth.context";
 
 function App() {
   const { setUser } = useContext(AuthContext);
+  const location = useLocation();
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('theme');
     return saved === 'dark';
   });
+  const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+    // Chỉ hiện intro khi user lần đầu vào session (f5 lại vẫn hiện cho đẹp)
+    setShowIntro(true);
+  }, []);
   useEffect(() => {
     GetAccount();
   }, []);
@@ -58,8 +68,8 @@ function App() {
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          colorPrimary: "#3b82f6",
-          colorPrimaryHover: "var(--color-primary-hover)",
+          colorPrimary: "#0077b6", // Sea Blue
+          colorPrimaryHover: "#0050b3",
           colorText: "var(--color-text)",
           colorTextSecondary: "var(--color-text-secondary)",
           colorBgLayout: "var(--bg-app)",
@@ -69,10 +79,10 @@ function App() {
           colorSplit: "var(--color-border)",
           controlItemBgHover: "var(--color-bg-soft)",
           controlItemBgActive: "var(--color-bg-soft)",
-          controlOutline: "var(--color-primary-hover)",
+          controlOutline: "rgba(0, 119, 182, 0.2)",
           boxShadowTertiary: "var(--shadow-soft)",
           boxShadowSecondary: "var(--shadow-medium)",
-          borderRadius: 12,
+          borderRadius: 8,
           borderRadiusLG: 12,
         },
         components: {
@@ -109,8 +119,13 @@ function App() {
         },
       }}
     >
+      {showIntro && <IntroScreen onComplete={() => setShowIntro(false)} />}
       <Header isDarkTheme={isDark} onToggleTheme={() => setIsDark((v) => !v)} />
-      <Outlet />
+      <AnimatePresence mode="wait">
+        <PageTransition key={location.pathname}>
+          <Outlet />
+        </PageTransition>
+      </AnimatePresence>
       <Footer />
     </ConfigProvider>
   );

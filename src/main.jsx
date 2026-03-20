@@ -32,6 +32,9 @@ import AboutPage from './pages/static/about.jsx';
 import StyleGuidePage from './pages/static/style.guide.jsx';
 import ManageMyCVPage from './pages/cv/manage.jsx';
 import JobAlertsPage from './pages/job/alerts.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
+import NotificationPage from './pages/admin/notification.jsx';
 
 const router = createBrowserRouter([
   {
@@ -67,9 +70,7 @@ const router = createBrowserRouter([
         </PrivateRoute>
       ) }
       ,{ path: '/job-alerts', element: (
-        <PrivateRoute>
           <JobAlertsPage />
-        </PrivateRoute>
       ) }
     ],
   },
@@ -89,11 +90,14 @@ const router = createBrowserRouter([
       { path: 'permission', element: <PrivateRoute><PermissionPage /></PrivateRoute> },
       { path: 'role', element: <PrivateRoute><RolePage /></PrivateRoute> },
       { path: 'banner', element: <PrivateRoute><BannerAdminPage /></PrivateRoute> },
+      { path: 'notification', element: <PrivateRoute><NotificationPage /></PrivateRoute> },
     ],
   },
 
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <Register /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '*', element: <ErrorPage /> }, // ✅ Route 404
 ]);
 

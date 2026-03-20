@@ -2,6 +2,8 @@ import { Button, Checkbox, Divider, Form, Input, notification, Select } from "an
 import { registerUserAPI } from "../services/api.service";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
+import styles from '../styles/auth.module.scss';
+import { UserAddOutlined } from '@ant-design/icons';
 
 const RegisterPage = () => {
     const [form] = Form.useForm();
@@ -57,99 +59,93 @@ const RegisterPage = () => {
     };
 
     return (
-        <div style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",  // Chiều cao full màn hình
-            backgroundColor: "var(--bg-app)"
-        }}>
-            <div style={{
-                width: "400px",
-                padding: "20px",
-                borderRadius: "8px",
-                backgroundColor: "var(--color-bg)",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
-            }}>
-                <div style={{ textAlign: "center", marginBottom: "20px" }}>
-                    <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "var(--color-text)" }}>Đăng Ký Tài Khoản</h2>
-                    <Divider />
+        <div className={styles['auth-container']}>
+            <div className={styles['auth-card']}>
+                <div className={styles['auth-side-left']}>
+                    <UserAddOutlined className={styles['auth-icon']} />
+                    <h2>Đăng Ký</h2>
+                    <p>Tạo tài khoản mới để khám phá hàng ngàn cơ hội việc làm hấp dẫn.</p>
                 </div>
-                <Form
-                    layout="vertical"
-                    form={form}
-                    name="basic"
-                    initialValues={{ remember: true }}
-                    onFinish={onFinish}
-                    onFinishFailed={onFinishFailed}
-                >
-                    <Form.Item label="Họ và tên" name="name"
-                        rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }, { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }]}>
-                        <Input placeholder="Nhập họ và tên" />
-                    </Form.Item>
 
-                    <Form.Item label="Email" name="email"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập email!' },
-                            { type: 'email', message: 'Email không hợp lệ!' }
-                        ]}>
-                        <Input placeholder="Nhập email" />
-                    </Form.Item>
+                <div className={styles['auth-side-right']}>
+                    <div className={styles['form-header']}>
+                        <h3>Tạo tài khoản</h3>
+                        <p>Nhập thông tin cá nhân của bạn</p>
+                    </div>
 
-                    <Form.Item label="Mật khẩu" name="password"
-                        rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }, { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }]}>
-                        <Input.Password placeholder="Nhập mật khẩu" />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Xác nhận mật khẩu"
-                        name="confirm"
-                        dependencies={["password"]}
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập lại mật khẩu!' },
-                            ({ getFieldValue }) => ({
-                                validator(_, value) {
-                                    if (!value || getFieldValue('password') === value) {
-                                        return Promise.resolve();
-                                    }
-                                    return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                                },
-                            }),
-                        ]}
+                    <Form
+                        layout="vertical"
+                        form={form}
+                        name="basic"
+                        initialValues={{ remember: true }}
+                        onFinish={onFinish}
+                        onFinishFailed={onFinishFailed}
+                        size="large"
                     >
-                        <Input.Password placeholder="Nhập lại mật khẩu" />
-                    </Form.Item>
+                        <Form.Item label="Họ và tên" name="name"
+                            rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }, { min: 2, message: 'Họ và tên phải có ít nhất 2 ký tự' }]}>
+                            <Input placeholder="Nhập họ và tên" />
+                        </Form.Item>
 
-                    
+                        <Form.Item label="Email" name="email"
+                            rules={[
+                                { required: true, message: 'Vui lòng nhập email!' },
+                                { type: 'email', message: 'Email không hợp lệ!' }
+                            ]}>
+                            <Input placeholder="Nhập email" />
+                        </Form.Item>
 
-                    <Form.Item name="gender" label="Giới tính"
-                        rules={[{ required: true, message: 'Giới tính không được để trống!' }]}> 
-                        <Select allowClear placeholder="Chọn giới tính">
-                            <Select.Option value="MALE">Nam</Select.Option>
-                            <Select.Option value="FEMALE">Nữ</Select.Option>
-                            <Select.Option value="OTHER">Khác</Select.Option>
-                        </Select>
-                    </Form.Item>
+                        <Form.Item label="Mật khẩu" name="password"
+                            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }, { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }]}>
+                            <Input.Password placeholder="Nhập mật khẩu" />
+                        </Form.Item>
 
-                    <Form.Item label="Địa chỉ" name="address"
-                        rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }, { min: 5, message: 'Địa chỉ quá ngắn' }]}>
-                        <Input placeholder="Nhập địa chỉ" />
-                    </Form.Item>
+                        <Form.Item
+                            label="Xác nhận mật khẩu"
+                            name="confirm"
+                            dependencies={["password"]}
+                            rules={[
+                                { required: true, message: 'Vui lòng nhập lại mật khẩu!' },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (!value || getFieldValue('password') === value) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                                    },
+                                }),
+                            ]}
+                        >
+                            <Input.Password placeholder="Nhập lại mật khẩu" />
+                        </Form.Item>
 
-                    <Form.Item name="remember" valuePropName="checked">
-                        <Checkbox>Ghi nhớ đăng nhập</Checkbox>
-                    </Form.Item>
+                        <Form.Item name="gender" label="Giới tính"
+                            rules={[{ required: true, message: 'Giới tính không được để trống!' }]}> 
+                            <Select allowClear placeholder="Chọn giới tính">
+                                <Select.Option value="MALE">Nam</Select.Option>
+                                <Select.Option value="FEMALE">Nữ</Select.Option>
+                                <Select.Option value="OTHER">Khác</Select.Option>
+                            </Select>
+                        </Form.Item>
 
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit" loading={isSubmitting} style={{ width: "100%" }}>
-                            Đăng ký
-                        </Button>
-                    </Form.Item>
-                </Form>
-                <div style={{ textAlign: "center", marginTop: 8 }}>
-                    <span>
+                        <Form.Item label="Địa chỉ" name="address"
+                            rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }, { min: 5, message: 'Địa chỉ quá ngắn' }]}>
+                            <Input placeholder="Nhập địa chỉ" />
+                        </Form.Item>
+
+                        <Form.Item name="remember" valuePropName="checked">
+                            <Checkbox>Ghi nhớ đăng nhập</Checkbox>
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" loading={isSubmitting} style={{ width: "100%" }}>
+                                Đăng ký
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                    <div className={styles['bottom-text']}>
                         Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-                    </span>
+                    </div>
                 </div>
             </div>
         </div>

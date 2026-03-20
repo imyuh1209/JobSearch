@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Space, Popconfirm, message, Button, Input, Form, Tag, Drawer, Descriptions, Select } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { fetchAllResumeAPI, callDeleteResume, callUpdateResumeStatus } from "../../services/api.service";
+import { fetchAllResumeAPI, callDeleteResume, callUpdateResumeStatus, callFetchFile } from "../../services/api.service";
 import ViewDetailResume from "../../components/admin/resume/view.resume";
 import dayjs from 'dayjs';
 
@@ -114,6 +114,29 @@ const ResumePage = () => {
         }
     };
 
+    const handleViewCV = async (url, originalName) => {
+        if (!url) return;
+        try {
+            const blob = await callFetchFile(url, "resume");
+            const ext = originalName ? originalName.split('.').pop().toLowerCase() : '';
+            const isViewable = ['pdf', 'jpg', 'jpeg', 'png'].includes(ext);
+
+            if (isViewable) {
+                const fileURL = URL.createObjectURL(blob);
+                window.open(fileURL, '_blank');
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = originalName || url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } catch (error) {
+            message.error("Không thể tải file CV");
+        }
+    };
+
     const columns = [
         {
             title: "STT",
@@ -178,13 +201,13 @@ const ResumePage = () => {
         {
             title: "CV",
             dataIndex: "url",
-            render: (url) => url ? (
-                <a
-                    href={`${import.meta.env.VITE_BACKEND_URL}/storage/resume/${url}`}
-                    target="_blank"
+            render: (url, record) => url ? (
+                <span
+                    style={{ cursor: "pointer", color: "blue" }}
+                    onClick={() => handleViewCV(url, record?.originalName)}
                 >
                     Xem CV
-                </a>
+                </span>
             ) : "Không có CV"
         },
         {

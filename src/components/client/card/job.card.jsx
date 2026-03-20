@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { motion } from "framer-motion";
 import { Card, Col, Row, Divider, Pagination, Spin, Empty, Form, Select, InputNumber, Button, Space, message, Input, Tag } from "antd";
 import { fetchAllJobAPI, callSaveJob, callFetchSavedJobs, callUnsaveByJobId, callDeleteSavedJobBySavedId } from "../../../services/api.service";
 import { isMobile } from "react-device-detect";
@@ -8,7 +9,7 @@ import { EnvironmentOutlined, ThunderboltOutlined, HeartOutlined, HeartFilled } 
 import { buildQuery, LOCATION_LIST } from "../../../config/utils";
 import parseSemanticQuery from "../../../utils/semanticQueryParser";
 import { AuthContext } from "../../context/auth.context";
- 
+
 
 
 const JobCard = ({ showPagination = false }) => {
@@ -125,15 +126,17 @@ const JobCard = ({ showPagination = false }) => {
                 { desc: "bỏ 'Level'", apply: (f) => { const { level, ...rest } = f; return rest; } },
                 { desc: "bỏ 'Địa điểm'", apply: (f) => { const { location, ...rest } = f; return rest; } },
                 { desc: "bỏ 'Lương từ'", apply: (f) => { const { salaryMin, ...rest } = f; return rest; } },
-                { desc: "chỉ lọc theo công ty", apply: (f) => {
-                    const next = { ...f };
-                    // keep only company filter if exists
-                    const company = next["company.name"];
-                    for (const k of Object.keys(next)) {
-                        if (k !== "company.name") delete next[k];
+                {
+                    desc: "chỉ lọc theo công ty", apply: (f) => {
+                        const next = { ...f };
+                        // keep only company filter if exists
+                        const company = next["company.name"];
+                        for (const k of Object.keys(next)) {
+                            if (k !== "company.name") delete next[k];
+                        }
+                        return company ? { "company.name": company } : {};
                     }
-                    return company ? { "company.name": company } : {};
-                } },
+                },
                 { desc: "chỉ lọc theo từ khoá", apply: (f) => (f.name ? { name: f.name } : {}) },
                 { desc: "hiển thị tất cả công việc", apply: () => ({}) },
             ];
@@ -425,54 +428,69 @@ const JobCard = ({ showPagination = false }) => {
                         {displayJob.length > 0 ? (
                             displayJob.map((item) => (
                                 <Col span={24} md={12} key={item.id}>
-                                    <Card size="small" title={null} hoverable
-                                        onClick={() => handleViewDetailJob(item)}
+                                    <motion.div
+                                        whileHover={{ y: -4, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                                        transition={{ duration: 0.2 }}
+                                        style={{ height: "100%" }}
                                     >
-                                        <div className={styles["card-job-content"]}>
-                                            <div className={styles["card-job-left"]}>
-                                                <img
-                                                    alt="example"
-                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item?.company?.logo}`}
-                                                />
-                                            </div>
-                                            <div className={styles["card-job-right"]}>
-                                                <div className={styles["job-title"]}>
-                                                    {item.name}
+                                        <Card size="small" title={null} hoverable={true}
+                                            className={styles["job-card-wrapper"]}
+                                            onClick={() => handleViewDetailJob(item)}
+                                            style={{ height: "100%", display: "flex", flexDirection: "column" }}
+                                            bodyStyle={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+                                        >
+                                            <div className={styles["card-job-content"]}>
+                                                <div className={styles["card-job-left"]}>
+                                                    <img
+                                                        alt="example"
+                                                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item?.company?.logo}`}
+                                                    />
                                                 </div>
-                                                {!!item.level && (
-                                                    <div style={{ margin: "4px 0 6px" }}>
-                                                        <Tag color="geekblue" style={{ borderRadius: 999, padding: "0 10px" }}>{item.level}</Tag>
+                                                <div className={styles["card-job-right"]}>
+                                                    <div className={styles["job-title"]}>
+                                                        {item.name}
                                                     </div>
-                                                )}
-                                                <div className={styles["job-location"]}><EnvironmentOutlined style={{ color: '#58aaab' }} />&nbsp;{getLocationLabel(item.location)}</div>
-                                                <div>
-                                                    <ThunderboltOutlined style={{ color: 'orange' }} />&nbsp;
-                                                    {(() => {
-                                                        const fmt = (v) => ("" + (v ?? 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                                                        const min = item?.salaryMin;
-                                                        const max = item?.salaryMax;
-                                                        if (min == null && max == null) return 'Thoả thuận';
-                                                        if (min === max) return `${fmt(min)} đ`;
-                                                        return `${fmt(min)} — ${fmt(max)} đ`;
-                                                    })()}
+                                                    {!!item.level && (
+                                                        <div style={{ margin: "4px 0 6px" }}>
+                                                            <Tag color="geekblue" style={{ borderRadius: 999, padding: "0 10px" }}>{item.level}</Tag>
+                                                        </div>
+                                                    )}
+                                                    <div className={styles["job-location"]}><EnvironmentOutlined style={{ color: '#58aaab' }} />&nbsp;{getLocationLabel(item.location)}</div>
+                                                    <div>
+                                                        <ThunderboltOutlined style={{ color: 'orange' }} />&nbsp;
+                                                        {(() => {
+                                                            const fmt = (v) => {
+                                                                const num = Number(v || 0);
+                                                                if (num >= 1000000) {
+                                                                    return `${(num / 1000000).toLocaleString('en-US')} triệu`;
+                                                                }
+                                                                return `${num.toLocaleString('en-US')} đ`;
+                                                            };
+                                                            const min = item?.salaryMin;
+                                                            const max = item?.salaryMax;
+                                                            if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
+                                                            if (min === max) return `${fmt(min)}`;
+                                                            return `${fmt(min)} — ${fmt(max)}`;
+                                                        })()}
+                                                    </div>
+
                                                 </div>
-                                                
                                             </div>
-                                        </div>
 
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                                            <Button
-                                                type="text"
-                                                icon={savedIds.has(item.id) ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
-                                                onClick={(e) => toggleSaveJob(item.id, e)}
-                                                loading={savingSet.has(item.id)}
-                                                disabled={savingSet.has(item.id)}
-                                            >
-                                                {savedIds.has(item.id) ? "Đã lưu" : "Lưu"}
-                                            </Button>
-                                        </div>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                                                <Button
+                                                    type="text"
+                                                    icon={savedIds.has(item.id) ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
+                                                    onClick={(e) => toggleSaveJob(item.id, e)}
+                                                    loading={savingSet.has(item.id)}
+                                                    disabled={savingSet.has(item.id)}
+                                                >
+                                                    {savedIds.has(item.id) ? "Đã lưu" : "Lưu"}
+                                                </Button>
+                                            </div>
 
-                                    </Card>
+                                        </Card>
+                                    </motion.div>
                                 </Col>
                             ))
                         ) : (

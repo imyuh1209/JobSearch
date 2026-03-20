@@ -131,30 +131,14 @@ export const UserResume = () => {
             render(value, record) {
                 const url = record?.url;
                 if (!url) return 'Không có CV';
-                const href = `${import.meta.env.VITE_BACKEND_URL}/storage/resume/${url}`;
-                return (
-                    <a href={href} target="_blank" rel="noreferrer">Xem CV</a>
-                );
+                const base = import.meta.env.VITE_BACKEND_URL || '';
+                let href = '';
+                if (/^https?:/i.test(url)) href = url;
+                else if (url.startsWith('/storage/')) href = `${base}${url}`;
+                else if (url.startsWith('storage/')) href = `${base}/${url}`;
+                else href = `${base}/storage/resume/${url}`;
+                return (<a href={href} target="_blank" rel="noreferrer">Xem CV</a>);
             }
-        },
-        {
-            title: '',
-            dataIndex: "",
-            render(value, record) {
-                const status = record?.status || '';
-                const companyName = getCompanyName(record);
-                const jobName = record?.job?.name || '';
-                const goto = () => {
-                    const params = new URLSearchParams({ tab: 'resume' });
-                    if (status) params.set('status', status);
-                    if (companyName) params.set('company', companyName);
-                    if (jobName) params.set('job', jobName);
-                    navigate(`/account?${params.toString()}`);
-                };
-                return (
-                    <Button type="link" onClick={goto}>Chi tiết</Button>
-                )
-            },
         },
     ];
 

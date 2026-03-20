@@ -1,4 +1,11 @@
 import axios from "./axios.customize";
+import axiosLib from "axios";
+
+const axiosPublic = axiosLib.create({
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    withCredentials: true,
+    headers: { "Content-Type": "application/json" }
+});
 
 const loginUserAPI = (username, password) => {
     const URL_BACKEND = "/api/v1/auth/login";
@@ -7,6 +14,16 @@ const loginUserAPI = (username, password) => {
         password: password
     }
     return axios.post(URL_BACKEND, data)
+}
+
+const loginWithGoogle = (idToken) => {
+    const URL_BACKEND = "/api/v1/auth/google";
+    return axiosPublic.post(URL_BACKEND, { idToken });
+}
+
+const inspectGoogleToken = (idToken) => {
+    const URL_BACKEND = "/api/v1/auth/google/inspect";
+    return axiosPublic.post(URL_BACKEND, { idToken });
 }
 
 const createUserAPI = (name, email, password, address, age) => {
@@ -107,6 +124,16 @@ const callChangePassword = (currentPassword, newPassword) => {
     return axios.post(URL_BACKEND, { currentPassword, newPassword });
 }
 
+const callForgotPassword = (email) => {
+    const URL_BACKEND = "/api/v1/auth/forgot-password";
+    return axiosPublic.post(URL_BACKEND, { email });
+}
+
+const callResetPassword = (token, newPassword) => {
+    const URL_BACKEND = "/api/v1/auth/reset-password";
+    return axiosPublic.post(URL_BACKEND, { token, newPassword });
+}
+
 const callCreateCompany = (data) => {
     const URL_BACKEND = "/api/v1/companies";
     return axios.post(URL_BACKEND, data);
@@ -171,6 +198,7 @@ const callCreateSkill = (data) => {
     const URL_BACKEND = "/api/v1/skills";
     return axios.post(URL_BACKEND, data);
 };
+
 
 const callUpdateSkill = (id, data) => {
     const URL_BACKEND = "/api/v1/skills";
@@ -397,10 +425,94 @@ const runAlert = (id) => {
     return axios.post(URL_BACKEND);
 };
 
+// Job Alerts APIs: public create via JobAlertController
+const createJobAlert = (payload) => {
+    const URL_BACKEND = "/api/v1/job-alerts";
+    return axiosPublic.post(URL_BACKEND, payload);
+};
+
+const createJobAlertAuth = (payload) => {
+    const URL_BACKEND = "/api/v1/job-alerts";
+    return axios.post(URL_BACKEND, payload);
+};
+
+const listJobAlerts = (email) => {
+    const base = "/api/v1/job-alerts";
+    const url = email ? `${base}?email=${encodeURIComponent(email)}` : base;
+    return email ? axiosPublic.get(url) : axios.get(url);
+};
+
+const updateJobAlert = (id, payload) => {
+    const URL_BACKEND = "/api/v1/job-alerts";
+    return axios.put(URL_BACKEND, { ...payload, id });
+};
+
+const deleteJobAlert = (id) => {
+    const URL_BACKEND = `/api/v1/job-alerts/${id}`;
+    return axios.delete(URL_BACKEND);
+};
+
+const unsubscribeJobAlert = (token) => {
+    const URL_BACKEND = `/api/v1/job-alerts/unsubscribe?token=${encodeURIComponent(token)}`;
+    return axiosPublic.get(URL_BACKEND);
+};
+
+const runJobAlertNow = (id) => {
+    const URL_BACKEND = `/api/v1/job-alerts/${id}/run`;
+    return axios.post(URL_BACKEND);
+};
+
+// Web Push APIs
+const fetchWebPushPublicKey = () => axios.get('/api/v1/webpush/public-key');
+const webpushSubscribe = (subscription, channels = ['push']) => {
+    const URL_BACKEND = "/api/v1/webpush/subscribe";
+    return axios.post(URL_BACKEND, { subscription, channels });
+};
+
+
+// --- THÊM MỚI TỪ ĐÂY ---
+const getMyNotificationsAPI = (query) => {
+    const URL_BACKEND = `/api/v1/notifications?${query}`;
+    return axios.get(URL_BACKEND);
+}
+
+const countUnreadNotificationsAPI = () => {
+    const URL_BACKEND = "/api/v1/notifications/count-unread";
+    return axios.get(URL_BACKEND);
+}
+
+const markNotificationAsReadAPI = (id) => {
+    const URL_BACKEND = `/api/v1/notifications/${id}/read`;
+    return axios.put(URL_BACKEND);
+}
+
+const callCreateNotification = (data) => {
+    const URL_BACKEND = "/api/v1/notifications";
+    return axios.post(URL_BACKEND, data);
+}
+
+const callDeleteNotification = (id) => {
+    const URL_BACKEND = `/api/v1/notifications/${id}`;
+    return axios.delete(URL_BACKEND);
+}
+
+const fetchAllNotificationAPI = (query) => {
+    const URL_BACKEND = `/api/v1/notifications/admin?${query}`;
+    return axios.get(URL_BACKEND);
+}
+// --- HẾT PHẦN THÊM MỚI ---
 
 export {
+    getMyNotificationsAPI,
+    countUnreadNotificationsAPI,
+    markNotificationAsReadAPI,
+    callCreateNotification,
+    callDeleteNotification,
+    fetchAllNotificationAPI,
     deleteCompanyAPI, logoutUserAPI, getAccount, registerUserAPI, callFetchJobById, fetchAllJobAPI, callFetchCompanyById, fetchAllCompanyAPI,
     loginUserAPI, createUserAPI, fetchAllUserAPI, updateUserAPI, deleteUserAPI, callCreateCompany, callUpdateCompany, callUploadSingleFile,
+    loginWithGoogle,
+    inspectGoogleToken,
     callCreateUser, callUpdateUser, callFetchUserById,
     // Skill APIs
     fetchAllSkillAPI, callCreateSkill, callUpdateSkill, callDeleteSkill, callFetchSkillById,
@@ -425,6 +537,8 @@ export {
   callUnsaveByJobId,
   callIsSavedJob,
   callChangePassword,
+  callForgotPassword,
+  callResetPassword,
   // Banner APIs
   callFetchHomeBanners,
   fetchAllBannerAPI,
@@ -437,4 +551,26 @@ export {
   listSavedSearches,
   deleteSavedSearch,
   runAlert,
+  // Job Alerts preferred endpoints
+  createJobAlert,
+  createJobAlertAuth,
+  listJobAlerts,
+  updateJobAlert,
+  deleteJobAlert,
+  unsubscribeJobAlert,
+  runJobAlertNow,
+  // Web Push
+  fetchWebPushPublicKey,
+    webpushSubscribe,
+    callFetchFile,
+};
+
+const callFetchFile = (fileName, folder = "resume") => {
+    const URL_BACKEND = `/api/v1/files?fileName=${fileName}&folder=${folder}`;
+    return axios.get(URL_BACKEND, {
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/pdf, application/msword, image/*, */*'
+        }
+    });
 };

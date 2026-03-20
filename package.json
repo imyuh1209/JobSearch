@@ -19,6 +19,7 @@
     "async-mutex": "^0.5.0",
     "axios": "^1.8.3",
     "dompurify": "^3.3.0",
+    "framer-motion": "^12.28.1",
     "html-react-parser": "^5.2.2",
     "marked": "^16.4.1",
     "react": "^19.0.0",

@@ -141,10 +141,16 @@ const toggleSave = async () => {
   };
 
   const salaryText = useMemo(() => {
-    const fmt = (n) => `${(Number(n || 0) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")} đ`;
+    const fmt = (n) => {
+      const num = Number(n || 0);
+      if (num >= 1000000) {
+        return `${(num / 1000000).toLocaleString('en-US')} triệu`;
+      }
+      return `${num.toLocaleString('en-US')} đ`;
+    };
     const min = jobDetail?.salaryMin;
     const max = jobDetail?.salaryMax;
-    if (min == null && max == null) return 'Thoả thuận';
+    if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
     if (min === max) return fmt(min);
     return `${fmt(min)} — ${fmt(max)}`;
   }, [jobDetail]);

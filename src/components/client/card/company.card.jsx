@@ -58,20 +58,19 @@ const CompanyCard = ({ showPagination = false }) => {
                                 <Col span={24} md={6} key={item.id}>
                                     <Card
                                         onClick={() => handleViewDetailCompany(item)}
-                                        style={{ height: 350, textAlign: "center" }}
+                                        className={styles["company-grid-card"]}
                                         hoverable
+                                        bordered={false}
                                         cover={
-                                            <div className={styles["card-customize"]} >
+                                            <div className={styles["logo-wrapper"]} >
                                                 <img
-                                                    style={{ maxWidth: "200px" }}
                                                     alt={item.name}
                                                     src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item.logo}`}
                                                 />
                                             </div>
                                         }
                                     >
-                                        <Divider />
-                                        <h3>{item.name}</h3>
+                                        <div className={styles["company-name"]}>{item.name}</div>
                                     </Card>
                                 </Col>
                             ))

@@ -95,12 +95,16 @@ const JobPage = () => {
 
     const handleDeleteJob = async (id) => {
         if (id) {
-            const res = await callDeleteJob(id);
-            if (res && +res.statusCode === 200) {
-                message.success("Xóa Job thành công");
-                FetchAllJobs(meta.page, meta.pageSize);
-            } else {
-                message.error("Có lỗi xảy ra khi xóa Job");
+            try {
+                const res = await callDeleteJob(id);
+                if (res && +res.statusCode === 200) {
+                    message.success("Xóa Job thành công");
+                    FetchAllJobs(meta.page, meta.pageSize);
+                } else {
+                    message.error(res?.message || "Có lỗi xảy ra khi xóa Job");
+                }
+            } catch (error) {
+                message.error(error?.response?.data?.message || "Có lỗi xảy ra khi xóa Job");
             }
         }
     };
@@ -132,7 +136,7 @@ const JobPage = () => {
             render: (_, record) => {
                 const fmt = (val) => ("" + (val ?? 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 const { salaryMin, salaryMax } = record || {};
-                if (salaryMin == null && salaryMax == null) {
+                if ((salaryMin == null && salaryMax == null) || (salaryMin === 0 && salaryMax === 0)) {
                     return <>Thoả thuận</>;
                 }
                 if (salaryMin === salaryMax) {

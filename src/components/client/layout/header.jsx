@@ -7,20 +7,111 @@ import {
   SearchOutlined,
   UserAddOutlined,
   BulbOutlined,
+  BellOutlined, // <-- Thêm icon chuông
 } from "@ant-design/icons";
-import { Input, Menu, notification, Dropdown, Space, Button, Avatar, Badge } from "antd";
-import { useContext, useState } from "react";
+import { Input, Menu, notification, Dropdown, Space, Button, Avatar, Badge, Popover, List, Typography, Empty } from "antd";
+import { useContext, useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/auth.context";
-import { logoutUserAPI } from "../../../services/api.service";
+import { logoutUserAPI, getMyNotificationsAPI, countUnreadNotificationsAPI, markNotificationAsReadAPI } from "../../../services/api.service";
 import ManageAccount from "../modal/manage.account";
 import { fetchAllCompanyAPI } from "../../../services/api.service";
 import { buildQuery } from "../../../config/utils";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
+dayjs.extend(relativeTime);
+dayjs.locale('vi');
 
 const { Search } = Input;
 
 const Header = ({ isDarkTheme, onToggleTheme }) => {
   const { user, setUser } = useContext(AuthContext);
+
+  // --- LOGIC THÔNG BÁO ---
+  const [notifyList, setNotifyList] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [openNotify, setOpenNotify] = useState(false);
+
+  // Lấy số lượng tin chưa đọc khi load trang
+  useEffect(() => {
+    if (user?.id) {
+      fetchUnreadCount();
+    }
+  }, [user?.id]);
+
+  const fetchUnreadCount = async () => {
+    const res = await countUnreadNotificationsAPI();
+    if (res && res.data) {
+      setUnreadCount(res.data);
+    }
+  };
+
+  const handleOpenChange = async (newOpen) => {
+    setOpenNotify(newOpen);
+    if (newOpen) {
+      // Khi mở, load danh sách thông báo (ví dụ lấy 10 tin mới nhất)
+      const query = buildQuery(1, 10, {}, { sort: 'createdAt,desc' });
+      const res = await getMyNotificationsAPI(query);
+      if (res && res.data && res.data.result) {
+        setNotifyList(res.data.result);
+      }
+    }
+  };
+
+  const handleReadNotification = async (item) => {
+    if (!item.read) {
+      await markNotificationAsReadAPI(item.id);
+      // Cập nhật state local
+      setNotifyList(prev => prev.map(n => n.id === item.id ? { ...n, read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+    // Điều hướng nếu là thông báo ứng tuyển
+    if (item.title?.includes("Hồ sơ")) {
+      navigate("/account?tab=resume");
+      setOpenNotify(false);
+    }
+  };
+
+  const contentNotification = (
+    <div style={{ width: 350, maxHeight: 400, overflowY: 'auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+        <Typography.Text strong>Thông báo</Typography.Text>
+      </div>
+      {notifyList.length === 0 ? (
+        <Empty description="Không có thông báo nào" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      ) : (
+        <List
+          itemLayout="horizontal"
+          dataSource={notifyList}
+          renderItem={(item) => (
+            <List.Item
+              style={{
+                cursor: 'pointer',
+                background: item.read ? 'transparent' : '#e6f7ff',
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '4px'
+              }}
+              onClick={() => handleReadNotification(item)}
+            >
+              <List.Item.Meta
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography.Text strong style={{ fontSize: 13 }}>{item.title}</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                      {dayjs(item.createdAt).fromNow()}
+                    </Typography.Text>
+                  </div>
+                }
+                description={item.message}
+              />
+            </List.Item>
+          )}
+        />
+      )}
+    </div>
+  );
   const [current, setCurrent] = useState("home");
   const [keyword, setKeyword] = useState("");
   const [openMangeAccount, setOpenManageAccount] = useState(false);
@@ -51,17 +142,17 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
     {
       key: "home",
       icon: <HomeOutlined />,
-      label: <NavLink to="/">Home</NavLink>,
+      label: <NavLink to="/">Trang chủ</NavLink>,
     },
     {
       key: "company",
       icon: <BankOutlined />,
-      label: <NavLink to="/company">Company</NavLink>,
+      label: <NavLink to="/company">Công ty</NavLink>,
     },
     {
       key: "job",
       icon: <FileTextOutlined />,
-      label: <NavLink to="/job">Jobs</NavLink>,
+      label: <NavLink to="/job">Việc làm</NavLink>,
     },
   ];
 
@@ -222,25 +313,39 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
                 </Link>
               </Space>
             ) : (
-              <Dropdown menu={{ items: authDropdownItems }} trigger={["click"]}>
-                <Space style={{ cursor: "pointer" }}>
-                  <AliwangwangOutlined style={{ fontSize: 18, color: "var(--color-primary)" }} />
-                  <span>Welcome {user?.name}</span>
-                  <Badge dot color="#52c41a" offset={[-2, 2]}>
-                    <Avatar
-                      size={28}
-                      style={{
-                        background: "linear-gradient(135deg, #1677ff 0%, #69c0ff 100%)",
-                        color: "#fff",
-                        border: "2px solid #fff",
-                        boxShadow: "0 0 0 2px rgba(22, 119, 255, 0.35)",
-                      }}
-                    >
-                      {user?.name?.substring(0, 1)?.toUpperCase()}
-                    </Avatar>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <Popover
+                  content={contentNotification}
+                  trigger="click"
+                  open={openNotify}
+                  onOpenChange={handleOpenChange}
+                  placement="bottomRight"
+                >
+                  <Badge count={unreadCount} overflowCount={99} size="small">
+                    <BellOutlined style={{ fontSize: 20, cursor: 'pointer', color: 'var(--color-primary)' }} />
                   </Badge>
-                </Space>
-              </Dropdown>
+                </Popover>
+
+                <Dropdown menu={{ items: authDropdownItems }} trigger={["click"]}>
+                  <Space style={{ cursor: "pointer" }}>
+                    <AliwangwangOutlined style={{ fontSize: 18, color: "var(--color-primary)" }} />
+                    <span>Welcome {user?.name}</span>
+                    <Badge dot color="#52c41a" offset={[-2, 2]}>
+                      <Avatar
+                        size={28}
+                        style={{
+                          background: "linear-gradient(135deg, #1677ff 0%, #69c0ff 100%)",
+                          color: "#fff",
+                          border: "2px solid #fff",
+                          boxShadow: "0 0 0 2px rgba(22, 119, 255, 0.35)",
+                        }}
+                      >
+                        {user?.name?.substring(0, 1)?.toUpperCase()}
+                      </Avatar>
+                    </Badge>
+                  </Space>
+                </Dropdown>
+              </div>
             )}
           </div>
         </div>
