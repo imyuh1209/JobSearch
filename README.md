@@ -1,6 +1,6 @@
-# JobHunter - Frontend Web Application (React.js)
+# WorkGo - Frontend Web Application (React.js)
 
-Giao diện người dùng hiện đại cho dự án **JobHunter**, cung cấp trải nghiệm tìm kiếm việc làm và quản trị tuyển dụng chuyên nghiệp.
+Giao diện người dùng hiện đại cho dự án **WorkGo**, cung cấp trải nghiệm tìm kiếm việc làm và quản trị tuyển dụng chuyên nghiệp.
 
 ---
 

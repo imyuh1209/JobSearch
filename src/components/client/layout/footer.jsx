@@ -33,7 +33,7 @@ const Footer = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🎯</div>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>JobHunter</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>WorkGo</span>
             </div>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.7, marginBottom: 28, maxWidth: 280 }}>
               Kết nối ứng viên tài năng với các công ty công nghệ hàng đầu. Nhanh chóng, tiện lợi và hiệu quả.
@@ -103,7 +103,7 @@ const Footer = () => {
           padding: '24px 0',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16
         }}>
-          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>© {year} JobHunter. From HuyTruong with ❤️.</span>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>© {year} WorkGo. From HuyTruong with ❤️.</span>
         </div>
       </div>
 

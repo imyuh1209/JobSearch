@@ -77,7 +77,13 @@ const IntroScreen = ({ onComplete }) => {
                         style={{ position: 'absolute', inset: -4, borderRadius: 28, background: 'conic-gradient(from 0deg, transparent 0 280deg, rgba(255,255,255,0.8) 360deg)', opacity: 0.5, filter: 'blur(4px)' }}
                     />
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative', zIndex: 2 }}>
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        {/* Magnifying Glass Lens */}
+                        <circle cx="11" cy="11" r="8" />
+                        {/* Magnifying Glass Handle */}
+                        <path d="m21 21-4.3-4.3" />
+                        {/* Mini Briefcase inside the lens */}
+                        <rect x="8" y="9" width="6" height="4" rx="1" strokeWidth="1.5" />
+                        <path d="M13 9V8a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v1" strokeWidth="1.5" />
                     </svg>
                 </motion.div>
 
@@ -97,7 +103,7 @@ const IntroScreen = ({ onComplete }) => {
                             WebkitTextFillColor: 'transparent',
                         }}
                     >
-                        JobHunter
+                        WorkGo
                     </motion.h1>
                 </div>
 
@@ -115,6 +121,7 @@ const IntroScreen = ({ onComplete }) => {
                             margin: 0
                         }}
                     >
+                        FIND YOUR FUTURE
                     </motion.p>
                 </div>
 

@@ -111,7 +111,7 @@ const RegisterPage = () => {
                 }}>
                     <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 44, textDecoration: 'none' }}>
                         <div style={{ width: 42, height: 42, borderRadius: 13, background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🚀</div>
-                        <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>JobHunter</span>
+                        <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>WorkGo</span>
                     </Link>
                     <h1 style={{ fontSize: 34, fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.04em', margin: '0 0 16px' }}>
                         Bắt đầu hành<br />trình của bạn 🌟

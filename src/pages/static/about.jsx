@@ -9,7 +9,7 @@ const AboutPage = () => {
     <div className={`${styles["container"]}`} style={{ paddingTop: 24, paddingBottom: 24 }}>
       <Title level={2}>Giới thiệu</Title>
       <Paragraph>
-        JobHunter là nền tảng kết nối ứng viên và nhà tuyển dụng, giúp quá trình tuyển dụng
+        WorkGo là nền tảng kết nối ứng viên và nhà tuyển dụng, giúp quá trình tuyển dụng
         và tìm việc trở nên nhanh chóng, minh bạch và hiệu quả.
       </Paragraph>
       <Divider />

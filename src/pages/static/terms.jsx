@@ -9,7 +9,7 @@ const TermsPage = () => {
     <div className={`${styles["container"]}`} style={{ paddingTop: 24, paddingBottom: 24 }}>
       <Title level={2}>Điều khoản sử dụng</Title>
       <Paragraph>
-        Khi sử dụng nền tảng JobHunter, bạn đồng ý tuân thủ các điều khoản và quy định
+        Khi sử dụng nền tảng WorkGo, bạn đồng ý tuân thủ các điều khoản và quy định
         của chúng tôi, nhằm đảm bảo trải nghiệm an toàn và công bằng cho tất cả người dùng.
       </Paragraph>
       <Divider />

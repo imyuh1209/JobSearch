@@ -128,7 +128,7 @@ const LayoutAdmin = () => {
                     }}>⚡</div>
                     {!collapsed && (
                         <div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>JobHunter</div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>WorkGo</div>
                             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Admin Panel</div>
                         </div>
                     )}

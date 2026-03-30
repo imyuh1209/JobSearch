@@ -75,11 +75,11 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
 
   const contentNotification = (
     <div style={{ width: 350, maxHeight: 400, overflowY: 'auto', padding: '4px 8px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '12px 0 8px', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 0 8px',
         borderBottom: '1px solid var(--color-border)',
         marginBottom: 8
       }}>
@@ -108,8 +108,8 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
                 title={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                       {!item.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />}
-                       <Typography.Text strong style={{ fontSize: 13, color: 'var(--color-text)' }}>{item.title}</Typography.Text>
+                      {!item.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />}
+                      <Typography.Text strong style={{ fontSize: 13, color: 'var(--color-text)' }}>{item.title}</Typography.Text>
                     </div>
                     <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                       {dayjs(item.createdAt).fromNow()}
@@ -218,8 +218,8 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
     setKeyword("");
   };
 
-  // Logo public qua Spring static mapping: /storage/**
-  const logoUrl = `${import.meta.env.VITE_BACKEND_URL}/storage/logoweb.png`;
+  // Logo local trong thư mục public/
+  const logoUrl = "/logo.png";
 
   return (
     <>
@@ -253,12 +253,12 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
         >
           {/* Logo + brand */}
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: 'none' }}>
               <img
                 src={logoUrl}
-                alt="JobHunter"
+                alt="WorkGo"
                 style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)' }}
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
+              // onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
               <span
                 style={{
@@ -270,7 +270,7 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
                   letterSpacing: -0.5,
                 }}
               >
-                JobHunter
+                WorkGo
               </span>
             </Link>
 
