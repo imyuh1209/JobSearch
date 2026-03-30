@@ -3,23 +3,24 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f2f5; // Fallback
-    background-color: var(--bg-app, #f0f2f5);
-    padding: 20px;
+    background-color: var(--bg-app);
+    background-image: radial-gradient(ellipse at center, rgba(79, 70, 229, 0.1) 0%, var(--bg-app) 70%);
+    padding: 24px;
 }
 
 .auth-card {
     display: flex;
-    width: 900px;
+    width: 1000px;
     max-width: 100%;
     background-color: #ffffff;
     background-color: var(--color-bg, #ffffff);
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border);
     overflow: hidden;
-    min-height: 550px;
+    min-height: 600px;
 
-    @media (max-width: 768px) {
+    @media (max-width: 800px) {
         flex-direction: column;
         width: 100%;
         max-width: 450px;
@@ -29,7 +30,7 @@
 
 .auth-side-left {
     flex: 1;
-    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -53,11 +54,12 @@
     }
 
     h2 {
-        font-size: 36px;
-        font-weight: 700;
+        font-size: 42px;
+        font-weight: 800;
         margin-bottom: 16px;
         color: white;
         z-index: 1;
+        letter-spacing: -0.02em;
     }
 
     p {
@@ -92,16 +94,16 @@
         margin-bottom: 30px;
 
         h3 {
-            font-size: 26px;
-            font-weight: 700;
-            color: #1f2937;
-            color: var(--color-text, #1f2937);
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--color-text);
             margin-bottom: 8px;
+            letter-spacing: -0.02em;
         }
 
         p {
-            color: #6b7280;
-            color: var(--color-text-secondary, #6b7280);
+            color: var(--color-text-secondary);
+            font-size: 16px;
         }
     }
 }

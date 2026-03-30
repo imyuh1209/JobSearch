@@ -1,6 +1,6 @@
 // Vietnamese Semantic Query Parser
 // Parses natural language like: "việc làm React lương > 15tr ở HN"
-// to structured filters: { keyword, level, location, salaryMin, salaryMax }
+// to structured filters: { keyword, level, location, salaryMin, salaryMax, companyName }
 import { LOCATION_LIST } from "../config/utils";
 
 // Remove Vietnamese accents for easier matching
@@ -18,10 +18,9 @@ const toVND = (num, unit) => {
   if (Number.isNaN(n)) return null;
   const u = (unit || "").toLowerCase();
   if (u.includes("k") || u.includes("nghin") || u.includes("nghìn")) return n * 1_000;
-  if (u.includes("m")) return n * 1_000_000; // common shorthand for million
+  if (u.includes("m")) return n * 1_000_000;
   if (u.includes("tr") || u.includes("trieu") || u.includes("triệu")) return n * 1_000_000;
-  if (u.includes("vnd") || u.includes("d") || u.includes("đ")) return n; // already VND
-  // default assume million when unit omitted in VN job context
+  if (u.includes("vnd") || u.includes("d") || u.includes("đ")) return n;
   return n * 1_000_000;
 };
 
@@ -29,16 +28,8 @@ const toVND = (num, unit) => {
 const LOCATION_ALIAS = {
   HANOI: ["hn", "ha noi", "hanoi", "ha-noi", "hà nội"],
   HOCHIMINH: [
-    "hcm",
-    "tp hcm",
-    "tp.hcm",
-    "hcmc",
-    "ho chi minh",
-    "ho-chi-minh",
-    "sai gon",
-    "saigon",
-    "sg",
-    "sài gòn",
+    "hcm", "tp hcm", "tp.hcm", "hcmc", "ho chi minh",
+    "ho-chi-minh", "sai gon", "saigon", "sg", "sài gòn",
   ],
   DANANG: ["dn", "da nang", "danang", "đà nẵng", "da-nang"],
   HAIPHONG: ["hp", "hai phong", "haiphong", "hải phòng"],
@@ -58,7 +49,6 @@ const LEVEL_ALIAS = {
 
 // Extract location value code from text
 const extractLocation = (normText) => {
-  // 1) Try matching by official labels from LOCATION_LIST (accent-insensitive)
   if (Array.isArray(LOCATION_LIST)) {
     for (const loc of LOCATION_LIST) {
       const code = String(loc.value || "");
@@ -68,10 +58,8 @@ const extractLocation = (normText) => {
       if (normText.includes(labelNorm)) return code;
     }
   }
-  // 2) Fallback aliases for common abbreviations
   for (const [code, aliases] of Object.entries(LOCATION_ALIAS)) {
     for (const a of aliases) {
-      // word-boundary to reduce false positives
       const re = new RegExp(`(^|[^a-z])${a}([^a-z]|$)`);
       if (re.test(normText)) return code;
     }
@@ -92,30 +80,40 @@ const extractLevel = (normText) => {
 // Extract salary comparators and range
 const extractSalary = (text) => {
   const norm = removeAccents(text.toLowerCase());
-  // Common range: "tu 10tr den 20tr", "10-20tr"
-  const range1 = norm.match(/tu\s*(\d+[\.,]?\d*)\s*(tr|trieu|m|k|nghin|\u0111|d|vnd)?\s*(den|->|\-|to)\s*(\d+[\.,]?\d*)\s*(tr|trieu|m|k|nghin|\u0111|d|vnd)?/);
+
+  // Range: "tu 10tr den 20tr", "10-20tr"
+  const range1 = norm.match(
+    /tu\s*(\d+[.,]?\d*)\s*(tr|trieu|m|k|nghin|d|vnd)?\s*(den|->|-|to)\s*(\d+[.,]?\d*)\s*(tr|trieu|m|k|nghin|d|vnd)?/
+  );
   if (range1) {
     const min = toVND(range1[1].replace(/\./g, ""), range1[2]);
     const max = toVND(range1[4].replace(/\./g, ""), range1[5] || range1[2]);
     return { salaryMin: min, salaryMax: max };
   }
-  const range2 = norm.match(/(\d+[\.,]?\d*)\s*(tr|trieu|m|k)\s*\-\s*(\d+[\.,]?\d*)\s*(tr|trieu|m|k)/);
+
+  const range2 = norm.match(
+    /(\d+[.,]?\d*)\s*(tr|trieu|m|k)\s*-\s*(\d+[.,]?\d*)\s*(tr|trieu|m|k)/
+  );
   if (range2) {
     const min = toVND(range2[1].replace(/\./g, ""), range2[2]);
     const max = toVND(range2[3].replace(/\./g, ""), range2[4]);
     return { salaryMin: min, salaryMax: max };
   }
 
-  // Comparators around "luong": ">= 15tr", "> 15tr", "<= 20tr", "< 20tr"
-  const comp = norm.match(/luong[^\d<>]*([<>]=?)\s*(\d+[\.,]?\d*)\s*(tr|trieu|m|k|nghin|\u0111|d|vnd)?/);
+  // Comparators: "> 15tr", ">= 20tr"
+  const comp = norm.match(
+    /luong[^\d<>]*([<>]=?)\s*(\d+[.,]?\d*)\s*(tr|trieu|m|k|nghin|d|vnd)?/
+  );
   if (comp) {
     const val = toVND(comp[2].replace(/\./g, ""), comp[3]);
     if (comp[1].includes(">")) return { salaryMin: val };
     if (comp[1].includes("<")) return { salaryMax: val };
   }
 
-  // Fallback: presence of "luong" + a number+unit => assume salaryMin
-  const any = norm.match(/luong[^\d]*(\d+[\.,]?\d*)\s*(tr|trieu|m|k|nghin|\u0111|d|vnd)?/);
+  // Fallback: "luong 15tr" => salaryMin
+  const any = norm.match(
+    /luong[^\d]*(\d+[.,]?\d*)\s*(tr|trieu|m|k|nghin|d|vnd)?/
+  );
   if (any) {
     const val = toVND(any[1].replace(/\./g, ""), any[2]);
     return { salaryMin: val };
@@ -124,26 +122,67 @@ const extractSalary = (text) => {
   return { salaryMin: null, salaryMax: null };
 };
 
-// Extract keyword candidates (techs/domains) from text
-const extractKeywords = (text) => {
-  const techs = [
-    // Tech stack
-    "react", "node", "java", "python", "golang", "vue", "angular",
-    "ios", "android", "devops", "tester", "qa", "data", "backend",
-    "frontend", "flutter", "c#", "c++", "dotnet", "spring", "django",
-    "php", "laravel", "ruby", "rails", "kotlin", "swift", "typescript",
-    // Non-tech professions (VN & EN variants)
-    "marketing", "sale", "sales", "seo", "sem", "social", "pr",
-    "ke toan", "accounting", "nhan su", "hr", "human resources",
-    "customer service", "cs", "content", "copywriter",
-    "designer", "graphic", "ui", "ux", "ui/ux",
-    "product", "project", "business analyst", "ba",
-  ];
-  const lowerNorm = removeAccents(String(text || "").toLowerCase());
-  const found = techs.filter(t => lowerNorm.includes(t));
-  // Chỉ trả về khi khớp nghề/công nghệ; nếu không, để trống để tránh "lam", "viec"...
-  if (found.length > 0) return found[0];
+// Extract company name by explicit markers (@Company or "công ty: Name")
+function extractCompanyName(text = "") {
+  const t = String(text || "");
+  // @CompanyName pattern
+  const at = t.match(/@([\w\p{L}][^\s,;]+)/u);
+  if (at) return at[1].trim();
+  // "công ty: CompanyName" pattern
+  const colon = t.match(/\b(company|cong ty|cty)\s*:\s*([^,;\n]+)/i);
+  if (colon) return (colon[2] || "").trim();
   return "";
+}
+
+/**
+ * Strip known semantic tokens from the input text and return the remainder,
+ * which will be used as the free-text job-name / keyword.
+ *
+ * Strategy: strip strings that were already parsed as location, level, salary,
+ * company. Whatever remains is the job-title or skill-name the user typed.
+ */
+const stripKnownTokens = (text, { location, level, companyName }) => {
+  let t = text;
+
+  // 1. Strip salary expressions (lương X tr, tu X den Y, ...)
+  t = t.replace(
+    /(?:lương|luong|thu nhập|thu nhap)\s*[><=]?\s*\d+[.,]?\d*\s*(?:tr|triệu|trieu|m|k|nghìn|nghin)?/gi,
+    " "
+  );
+  t = t.replace(
+    /từ\s*\d+[.,]?\d*\s*(?:tr|triệu|trieu|m|k)?\s*(?:đến|den|-|to)\s*\d+[.,]?\d*\s*(?:tr|triệu|trieu|m|k)?/gi,
+    " "
+  );
+  t = t.replace(
+    /\d+[.,]?\d*\s*(?:tr|triệu|trieu|m|k)\s*-\s*\d+[.,]?\d*\s*(?:tr|triệu|trieu|m|k)/gi,
+    " "
+  );
+
+  // 2. Strip location expressions: "ở HN", "tại Hà Nội", "tại hcm"
+  t = t.replace(/(?:ở|tại|o |tai )\s*[^\s,;]+(?:\s+[^\s,;]+)?/gi, " ");
+
+  // 3. Strip level keywords
+  Object.values(LEVEL_ALIAS).flat().forEach((a) => {
+    t = t.replace(new RegExp(`\\b${a}\\b`, "gi"), " ");
+  });
+
+  // 4. Strip explicit company markers (@Co, "công ty: X")
+  t = t.replace(/@[\w\p{L}][^\s,;]+/gu, " ");
+  t = t.replace(/\b(?:company|cong ty|cty)\s*:\s*[^,;\n]+/gi, " ");
+  if (companyName) {
+    t = t.replace(new RegExp(companyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), " ");
+  }
+
+  // 5. Strip generic filler tokens
+  const stopWords = [
+    "việc làm", "viec lam", "tìm kiếm", "tim kiem", "cần tìm", "can tim",
+    "tuyển", "tuyen", "xin việc", "xin viec",
+  ];
+  stopWords.forEach((w) => {
+    t = t.replace(new RegExp(w, "gi"), " ");
+  });
+
+  return t.replace(/\s+/g, " ").trim();
 };
 
 export const parseSemanticQuery = (input = "") => {
@@ -153,8 +192,11 @@ export const parseSemanticQuery = (input = "") => {
   const { salaryMin, salaryMax } = extractSalary(text);
   const location = extractLocation(norm);
   const level = extractLevel(norm);
-  const keyword = extractKeywords(text);
   const companyName = extractCompanyName(text);
+
+  // Strip all known tokens → what remains is the job-name / keyword
+  const remaining = stripKnownTokens(text, { location, level, companyName });
+  const keyword = remaining.replace(/[,;]+/g, " ").replace(/\s+/g, " ").trim();
 
   return {
     keyword,
@@ -167,19 +209,3 @@ export const parseSemanticQuery = (input = "") => {
 };
 
 export default parseSemanticQuery;
-
-// --- Company name extraction ---
-// Supports patterns:
-//  - "@Viettel" (leading @)
-//  - "company: FPT", "công ty: VNG", "cty: ABC"
-// Keeps simple to avoid false positives; prefer explicit tokens.
-function extractCompanyName(text = "") {
-  const t = String(text || "");
-  // @Company pattern
-  const at = t.match(/@([\w\p{L}][^\s,;]+)/u);
-  if (at) return at[1].trim();
-  // company: name patterns
-  const colon = t.match(/\b(company|công ty|cty)\s*:\s*([^,;\n]+)/i);
-  if (colon) return (colon[2] || "").trim();
-  return "";
-}

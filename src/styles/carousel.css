@@ -1,0 +1,149 @@
+/* 3D Rotating Carousel - Tech Vanguard V3 - Balanced Edition */
+
+.carousel-wrapper {
+    width: 100%;
+    height: 500px;
+    /* Increased to prevent clipping at the bottom */
+    position: relative;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    /* Allow glow effects to bleed out */
+    perspective: 1200px;
+    margin: 40px 0;
+}
+
+.carousel-inner {
+    --w: 250px;
+    /* Card rộng hơn */
+    --h: 300px;
+    /* Card cao hơn */
+    --translateZ: 360px;
+    /* Bán kính vòng xoay phù hợp với 5 card */
+    --rotateX: -6deg;
+    --perspective: 1200px;
+    position: absolute;
+    width: var(--w);
+    height: var(--h);
+    z-index: 2;
+    transform-style: preserve-3d;
+    transform: perspective(var(--perspective)) rotateX(var(--rotateX));
+    /* Removing pure CSS animation, now controlled by React for better interactivity */
+    top: 50%;
+    left: 50%;
+    margin-top: calc(-1 * var(--h) / 2);
+    margin-left: calc(-1 * var(--w) / 2);
+}
+
+.carousel-card {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(calc((360deg / var(--quantity)) * var(--index))) translateZ(var(--translateZ));
+    backface-visibility: visible;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pause animation on hover */
+.carousel-inner:hover {
+    animation-play-state: paused;
+}
+
+/* Polished Card Styles */
+.carousel-image-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(79, 70, 229, 0.05) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.2),
+        0 0 20px rgba(79, 70, 229, 0.05);
+    /* Subtle glow */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.carousel-image-container:hover {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(124, 58, 237, 0.1) 100%);
+    transform: scale(1.05) translateY(-5px);
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(124, 58, 237, 0.2);
+}
+
+/* Inner glow ring */
+.carousel-image-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent, rgba(79, 70, 229, 0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.carousel-logo {
+    width: 100px;
+    /* Balanced size */
+    height: 100px;
+    border-radius: 20px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+    transition: transform 0.4s ease;
+}
+
+.carousel-image-container:hover .carousel-logo {
+    transform: scale(1.05) rotate(1deg);
+}
+
+.carousel-name {
+    color: #fff;
+    font-size: 16px;
+    /* Balanced typography */
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-indicator {
+    margin-top: 14px;
+    font-size: 11px;
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 6px 16px;
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    border-radius: 99px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    transition: all 0.3s;
+}
+
+.carousel-image-container:hover .carousel-indicator {
+    background: linear-gradient(to right, #6366f1, #a855f7);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}

@@ -68,22 +68,22 @@ function App() {
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          colorPrimary: "#0077b6", // Sea Blue
-          colorPrimaryHover: "#0050b3",
+          colorPrimary: "#4f46e5",
+          colorPrimaryHover: "#4338ca",
           colorText: "var(--color-text)",
           colorTextSecondary: "var(--color-text-secondary)",
-          colorBgLayout: "var(--bg-app)",
-          colorBgContainer: "var(--color-bg)",
-          colorBgElevated: "var(--color-bg)",
+          colorBgLayout: "transparent",
+          colorBgContainer: "var(--card-bg)",
+          colorBgElevated: "var(--card-bg)",
           colorBorder: "var(--color-border)",
           colorSplit: "var(--color-border)",
           controlItemBgHover: "var(--color-bg-soft)",
-          controlItemBgActive: "var(--color-bg-soft)",
-          controlOutline: "rgba(0, 119, 182, 0.2)",
-          boxShadowTertiary: "var(--shadow-soft)",
-          boxShadowSecondary: "var(--shadow-medium)",
-          borderRadius: 8,
-          borderRadiusLG: 12,
+          controlItemBgActive: "var(--color-primary-soft)",
+          controlOutline: "rgba(79, 70, 229, 0.2)",
+          boxShadowTertiary: "var(--shadow-md)",
+          boxShadowSecondary: "var(--shadow-lg)",
+          borderRadius: 12,
+          borderRadiusLG: 16,
         },
         components: {
           Menu: {
@@ -121,11 +121,13 @@ function App() {
     >
       {showIntro && <IntroScreen onComplete={() => setShowIntro(false)} />}
       <Header isDarkTheme={isDark} onToggleTheme={() => setIsDark((v) => !v)} />
-      <AnimatePresence mode="wait">
-        <PageTransition key={location.pathname}>
-          <Outlet />
-        </PageTransition>
-      </AnimatePresence>
+      <div style={{ minHeight: '100vh' }}>
+        <AnimatePresence mode="wait">
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+        </AnimatePresence>
+      </div>
       <Footer />
     </ConfigProvider>
   );

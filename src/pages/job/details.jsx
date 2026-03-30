@@ -12,7 +12,8 @@ import {
   Empty,
   Tooltip,
   Alert,
-  message
+  message,
+  notification
 } from "antd";
 import {
   DollarOutlined,
@@ -29,8 +30,9 @@ import DOMPurify from "dompurify";
 import { marked } from "marked";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
 import ApplyModal from "../../components/client/modal/apply.modal";
-import { callFetchJobById } from "../../services/api.service";
+import { callFetchJobById, callFetchResumeByUser } from "../../services/api.service";
 import { getLocationLabel } from "../../config/utils";
 import styles from "../../styles/client.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
@@ -38,21 +40,30 @@ import { HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { callSaveJob, callUnsaveByJobId, callIsSavedJob } from "../../services/api.service";
 import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth.context";
+
 dayjs.extend(relativeTime);
+dayjs.locale("vi");
 const { Title, Text } = Typography;
 
 const metaItemStyle = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  color: "#667085",
+  color: "var(--color-text-secondary)",
 };
 
-const pill = (text, color = "blue") => (
-  <Tag color={color} style={{ borderRadius: 999, padding: "2px 10px" }}>
-    {text}
-  </Tag>
-);
+const pill = (text, bgMode = "geekblue") => {
+  const isGreen = bgMode === 'green';
+  const isVol = bgMode === 'volcano';
+  const cText = isGreen ? '#166534' : isVol ? '#991b1b' : 'var(--color-text)';
+  const cBg = isGreen ? '#dcfce7' : isVol ? '#fee2e2' : 'var(--color-bg-soft)';
+  const cBd = isGreen ? '#bbf7d0' : isVol ? '#fecaca' : 'var(--card-border)';
+  return (
+    <Tag style={{ borderRadius: 6, padding: "2px 10px", margin: 0, background: cBg, color: cText, border: `1px solid ${cBd}`, fontWeight: 500 }}>
+      {text}
+    </Tag>
+  );
+};
 
 const ClientJobDetailPage = () => {
   const [jobDetail, setJobDetail] = useState(null);
@@ -64,10 +75,12 @@ const ClientJobDetailPage = () => {
 const { user } = useContext(AuthContext);
 const [isSaved, setIsSaved] = useState(false);
 const [saving, setSaving] = useState(false);
+const [isApplied, setIsApplied] = useState(false);
+const [isCheckingApplied, setIsCheckingApplied] = useState(false);
   const backend = import.meta.env.VITE_BACKEND_URL;
 
   const checkSaved = async () => {
-    if (!id) return;
+    if (!id || !user?.id) return;
     try {
       const res = await callIsSavedJob(+id);
       const saved = !!(res?.data && (res.data.saved === true));
@@ -77,9 +90,31 @@ const [saving, setSaving] = useState(false);
     }
   };
 
+  const checkAppliedStatus = async () => {
+    if (!id || !user?.id) {
+        setIsApplied(false);
+        return;
+    }
+    try {
+        setIsCheckingApplied(true);
+        const res = await callFetchResumeByUser();
+        if (res && res.data) {
+            const list = res.data.result || [];
+            // Kiểm tra xem jobId hiện tại có trong danh sách đã ứng tuyển không
+            const found = list.find(item => String(item?.job?.id) === String(id));
+            setIsApplied(!!found);
+        }
+    } catch (e) {
+        console.error("Error checking applied status:", e);
+    } finally {
+        setIsCheckingApplied(false);
+    }
+  };
+
   useEffect(() => {
     checkSaved();
-  }, [id]);
+    checkAppliedStatus();
+  }, [id, user?.id]);
 
 const toggleSave = async () => {
   if (!user?.id) {
@@ -135,6 +170,7 @@ const toggleSave = async () => {
       const res = await callFetchJobById(id);
       const data = res?.data ?? res;
       if (data?.id) setJobDetail(data);
+      await checkAppliedStatus(); // Cập nhật cả trạng thái đã ứng tuyển
     } catch (e) {
       console.error("Refetch job detail error:", e);
     }
@@ -181,9 +217,9 @@ const toggleSave = async () => {
       jobDetail?.postedDate,
     ].filter(Boolean);
     const t = candidates[0];
-    if (!t) return "";
+    if (!t) return "Cập nhật hôm nay";
     const d = parseDate(t);
-    return d.isValid() ? d.fromNow() : "";
+    return d.isValid() ? `Cập nhật ${d.fromNow()}` : "Cập nhật hôm nay";
   }, [jobDetail]);
 
   // Tuyển dụng: hiển thị khoảng thời gian startDate — endDate (nếu có)
@@ -245,11 +281,10 @@ const toggleSave = async () => {
   };
 
   return (
-    <div className={`${styles["container"]}`}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
       {/* Header actions */}
       <div
-        className="section-header"
-        style={{ marginBottom: 12, display: "flex", justifyContent: "space-between" }}
+        style={{ paddingTop: 100, marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: 'center' }}
       >
         <Button
           icon={<ArrowLeftOutlined />}
@@ -259,6 +294,35 @@ const toggleSave = async () => {
           Quay lại
         </Button>
         <Space>
+          <div 
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 12, 
+              padding: '4px 16px', border: '1px solid var(--color-border)', 
+              borderRadius: 12, background: 'var(--color-bg)',
+              cursor: 'pointer'
+            }}
+            onClick={() => !saving && toggleSave()}
+          >
+            <div className={styles["uiverse-heart-wrapper"]}>
+              {saving && (
+                <div style={{ position: 'absolute', zIndex: 20 }}>
+                  <Spin size="small" />
+                </div>
+              )}
+              <input 
+                type="checkbox" 
+                id={`save-job-detail-${jobDetail?.id}`} 
+                className={styles["switch-input"]}
+                checked={isSaved}
+                readOnly /* Handled by parent div click */
+              />
+              <label className={styles["love-heart"]} htmlFor={`save-job-detail-${jobDetail?.id}`}>
+                <i className={styles["round"]}></i>
+                <div className={styles["bottom"]}></div>
+              </label>
+            </div>
+            <Text strong style={{ minWidth: 60 }}>{isSaved ? "Đã lưu" : "Lưu tin"}</Text>
+          </div>
           <Tooltip title="Chia sẻ">
             <Button icon={<ShareAltOutlined />} onClick={handleShare} />
           </Tooltip>
@@ -269,8 +333,8 @@ const toggleSave = async () => {
         {/* LEFT: Job detail */}
         <Col xs={24} md={16}>
           <Card
-            bodyStyle={{ padding: 20 }}
-            style={{ borderRadius: 12, boxShadow: "0 4px 24px rgba(18,38,63,0.06)" }}
+            bodyStyle={{ padding: 40 }}
+            style={{ borderRadius: 24, border: "var(--card-border)", boxShadow: "var(--shadow-xl)", background: "var(--color-bg)" }}
           >
             {loading ? (
               <Skeleton active paragraph={{ rows: 6 }} />
@@ -302,32 +366,45 @@ const toggleSave = async () => {
                   </div>
 
                   <Button
-                    type="primary"
                     size="large"
-                    icon={<ThunderboltFilled />}
+                    type="primary"
                     onClick={() => setIsModalOpen(true)}
-                    disabled={!!jobDetail?.applied}
+                    disabled={isApplied || isCheckingApplied}
+                    loading={isCheckingApplied}
+                    style={{
+                      height: 50,
+                      padding: "0 32px",
+                      borderRadius: 12,
+                      fontWeight: 600,
+                      fontSize: 16,
+                      background: isApplied 
+                        ? "rgba(100, 116, 139, 0.1)" 
+                        : "linear-gradient(to right, #4f46e5, #6366f1)",
+                      border: isApplied ? "1px solid rgba(255,255,255,0.1)" : "none",
+                      boxShadow: isApplied ? "none" : "0 4px 14px rgba(79, 70, 229, 0.4)",
+                      color: isApplied ? "var(--color-text-secondary)" : "#fff"
+                    }}
                   >
-                    Ứng tuyển ngay
+                    {isApplied ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
                   </Button>
                 </div>
 
-                {/* Meta row */}
-                <div style={{ marginTop: 14 }}>
-                  <Space size="large" wrap>
+                <div style={{ marginTop: 32, marginBottom: 32, padding: "20px 24px", background: "var(--color-bg-soft)", borderRadius: 16, border: "var(--card-border)" }}>
+                  <Space size="large" wrap >
                     <div style={metaItemStyle}>
-                      <DollarOutlined />
-                      <Text strong>{salaryText}</Text>
+                      <DollarOutlined style={{ color: '#10b981', fontSize: 20 }} />
+                      <Text strong style={{ fontSize: 18, color: '#10b981' }}>{salaryText}</Text>
                     </div>
                     <div style={metaItemStyle}>
-                      <EnvironmentOutlined style={{ color: "#58aaab" }} />
-                      <Text>{getLocationLabel(jobDetail?.location)}</Text>
+                      <EnvironmentOutlined style={{ fontSize: 18 }} />
+                      <Text style={{ fontSize: 16 }}>{getLocationLabel(jobDetail?.location)}</Text>
                     </div>
                     <div style={metaItemStyle}>
                       <CalendarOutlined />
                       <Text>{recruitmentText}</Text>
                     </div>
                     <div style={metaItemStyle}>
+                      <HistoryOutlined />
                       <Text>{updatedText}</Text>
                     </div>
                   </Space>
@@ -370,10 +447,10 @@ const toggleSave = async () => {
 
         {/* RIGHT: Company sticky card */}
         <Col xs={24} md={8}>
-          <div style={{ position: "sticky", top: 16 }}>
+          <div style={{ position: "sticky", top: 24 }}>
             <Card
-              bodyStyle={{ padding: 20, textAlign: "center" }}
-              style={{ borderRadius: 12, boxShadow: "0 4px 24px rgba(18,38,63,0.06)" }}
+              bodyStyle={{ padding: 32, textAlign: "center" }}
+              style={{ borderRadius: 24, border: "var(--card-border)", boxShadow: "var(--shadow-lg)", background: "var(--color-bg)" }}
             >
               {loading ? (
                 <Skeleton.Avatar active shape="square" size={120} />
@@ -384,11 +461,12 @@ const toggleSave = async () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#fafafa",
-                    borderRadius: 10,
-                    border: "1px solid #e5e7eb",
-                    marginBottom: 12,
+                    background: "var(--color-bg-soft)",
+                    borderRadius: 16,
+                    border: "var(--card-border)",
+                    marginBottom: 20,
                     overflow: "hidden",
+                    padding: 8
                   }}
                 >
                   <img
@@ -415,8 +493,15 @@ const toggleSave = async () => {
               )}
               <Divider />
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Button block onClick={() => setIsModalOpen(true)} type="primary" disabled={!!jobDetail?.applied}>
-                  Ứng tuyển ngay
+                <Button 
+                    block 
+                    onClick={() => setIsModalOpen(true)} 
+                    type="primary" 
+                    disabled={isApplied || !!jobDetail?.applied || isCheckingApplied}
+                    loading={isCheckingApplied}
+                    style={{ borderRadius: 8 }}
+                >
+                  {isApplied ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
                 </Button>
                 <Button block href={`/company/${jobDetail?.company?.id}`}>
                   Xem trang công ty
@@ -435,17 +520,7 @@ const toggleSave = async () => {
         onAppliedSuccess={refetchJobDetail}
       />
 
-  <Button
-  type="text"
-  onClick={toggleSave}
-  icon={isSaved ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
-  loading={saving}
-  disabled={saving}
->
-  {isSaved ? "Đã lưu" : "Lưu job"}
-</Button>
     </div>
-    
   );
 };
 

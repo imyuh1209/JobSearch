@@ -12,7 +12,9 @@ import {
   Tooltip,
   Typography,
   Space,
+  Button
 } from "antd";
+import { motion } from "framer-motion";
 import {
   EnvironmentOutlined,
   ThunderboltOutlined,
@@ -84,59 +86,71 @@ const ClientCompanyDetailPage = () => {
 
 
   return (
-    <div className="company-detail-container">
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '120px 20px 60px' }}>
       {/* ===== HERO ===== */}
-            <Card className="company-hero" variant="borderless">
-        {isLoading ? (
-          <Skeleton active avatar paragraph={{ rows: 2 }} />
-        ) : companyDetail ? (
-          <Row gutter={[24, 24]} align="middle">
-            <Col xs={24} md={6} className="company-hero__logoWrap">
-              <img
-                className="company-hero__logo"
-                alt={companyDetail?.name}
-                src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${
-                  companyDetail?.logo
-                }`}
-              />
-            </Col>
+            <div 
+              style={{
+                position: 'relative',
+                borderRadius: 24,
+                overflow: 'hidden',
+                background: 'var(--card-bg)',
+                boxShadow: 'var(--shadow-lg)',
+                border: '1px solid var(--color-border)',
+                marginBottom: 32
+              }}
+            >
+              {/* Cover Image Placeholder */}
+              <div style={{ height: 200, background: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)' }}></div>
+              
+              <div style={{ padding: '0 32px 32px 32px', position: 'relative' }}>
+                <Row gutter={[24, 24]} align="bottom" style={{ marginTop: -50 }}>
+                  <Col xs={24} md={6}>
+                    <div style={{
+                      width: 140, height: 140, borderRadius: 24, background: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.1)', border: '4px solid var(--card-bg)', padding: 12, overflow: 'hidden'
+                    }}>
+                      <img
+                        alt={companyDetail?.name}
+                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${companyDetail?.logo}`}
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                  </Col>
 
-            <Col xs={24} md={18}>
-              <Space direction="vertical" size={4} className="w-full">
-                <Title level={2} className="company-hero__title">
-                  {companyDetail?.name}
-                </Title>
-
-                <div className="company-hero__meta">
-                  <span className="meta-item">
-                    <EnvironmentOutlined />
-                    <Text>&nbsp;{companyDetail?.address || "Đang cập nhật"}</Text>
-                  </span>
-
-                  <span className="meta-item">
-                    <ApartmentOutlined />
-                    <Text>&nbsp;{totalJobs} vị trí đang tuyển</Text>
-                  </span>
-                </div>
-              </Space>
-            </Col>
-          </Row>
-        ) : (
-          <Empty description="Không tìm thấy công ty" />
-        )}
-      </Card>
+                  <Col xs={24} md={18}>
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Title level={2} style={{ margin: 0, fontWeight: 800, fontSize: 32, color: 'var(--color-text)' }}>
+                        {companyDetail?.name}
+                      </Title>
+                      
+                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-bg-soft)', padding: '6px 16px', borderRadius: 100, fontWeight: 500 }}>
+                          <EnvironmentOutlined style={{ color: '#64748b' }} />
+                          <Text>{companyDetail?.address || "Đang cập nhật"}</Text>
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-soft)', padding: '6px 16px', borderRadius: 100, fontWeight: 600, color: 'var(--color-primary-hover)' }}>
+                          <ApartmentOutlined />
+                          <Text style={{ color: 'inherit' }}>{totalJobs} vị trí đang tuyển</Text>
+                        </span>
+                      </div>
+                    </Space>
+                  </Col>
+                </Row>
+              </div>
+            </div>
 
       {/* ===== DESCRIPTION ===== */}
-            <Card className="company-desc" variant="borderless">
+      <div style={{ background: 'var(--card-bg)', borderRadius: 24, padding: 32, boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border)', marginBottom: 32 }}>
         {isLoading ? (
           <Skeleton paragraph={{ rows: 6 }} active />
         ) : (
           <>
-            <Title level={4} className="section-title">
-              Giới thiệu
+            <Title level={3} style={{ fontWeight: 700, margin: 0 }}>
+              Giới thiệu công ty
             </Title>
-            <Divider className="section-divider" />
-            <div className="company-desc__content">
+            <Divider style={{ margin: '20px 0' }} />
+            <div className="company-desc__content" style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--color-text-secondary)' }}>
               {companyDetail?.description ? (
                 /<\/?[a-z][\s\S]*>/i.test(companyDetail.description)
                   ? parse(DOMPurify.sanitize(companyDetail.description))
@@ -151,7 +165,7 @@ const ClientCompanyDetailPage = () => {
             </div>
           </>
         )}
-      </Card>
+      </div>
 
       {/* ===== JOBS ===== */}
       <div className="company-jobs">
@@ -167,59 +181,85 @@ const ClientCompanyDetailPage = () => {
           {(!isLoadingJobs && totalJobs === 0) ? (
             <Empty description="Hiện chưa có vị trí tuyển dụng" />
           ) : (
-            <Row gutter={[16, 16]}>
+            <Row gutter={[20, 20]}>
               {companyJobs.map((job) => (
-                <Col xs={24} sm={12} md={8} key={job.id}>
-                  <Card
-                    hoverable
-                    className="job-card"
-                    onClick={() => gotoJobDetail(job)}
-                    cover={
-                      <div className="job-card__cover">
-                        <img
-                          alt={job?.company?.name}
-                          src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${
-                            job?.company?.logo
-                          }`}
-                        />
-                      </div>
-                    }
+                <Col xs={24} md={12} lg={12} key={job.id}>
+                  <motion.div
+                      whileHover={{ y: -6, scale: 1.01 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      style={{ height: "100%" }}
                   >
-                    <div className="job-card__body">
-                      <Tooltip title={job.name}>
-                        <Title level={5} className="job-card__title" ellipsis>
-                          {job.name}
-                        </Title>
-                      </Tooltip>
+                      <div
+                          onClick={() => gotoJobDetail(job)}
+                          style={{
+                              background: 'var(--card-bg)',
+                              borderRadius: 16,
+                              padding: 24,
+                              height: '100%',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              border: '1px solid var(--color-border)',
+                              boxShadow: 'var(--shadow-sm)',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              flexDirection: 'column',
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-xl)'; e.currentTarget.style.borderColor = 'var(--color-primary-soft)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                      >
+                          <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+                              {/* Logo Box */}
+                              <div style={{
+                                  width: 72, height: 72, borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 8
+                              }}>
+                                  <img
+                                      alt={job?.company?.name}
+                                      src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${job?.company?.logo}`}
+                                      style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                  />
+                              </div>
 
-                      <div className="job-card__meta">
-                        <span className="meta-item">
-                          <EnvironmentOutlined />
-                          <Text>&nbsp;{getLocationLabel(job.location)}</Text>
-                        </span>
-                        <span className="meta-item">
-                          <ThunderboltOutlined style={{ color: "orange" }} />
-                          <Text>&nbsp;
-                            {(() => {
-                              const min = job?.salaryMin;
-                              const max = job?.salaryMax;
-                              if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
-                              return min === max ? currency(min) : `${currency(min)} — ${currency(max)}`;
-                            })()}
-                          </Text>
-                        </span>
-                      </div>
+                              {/* Content info */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                  <h3 style={{
+                                      fontSize: 18, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12, lineHeight: 1.4,
+                                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                                  }}>
+                                      {job.name}
+                                  </h3>
 
-                      <div className="job-card__tags">
-                        {!!job.level && <Tag color="geekblue">{job.level}</Tag>}
-                        {(job.skills || []).slice(0, 3).map((s) => (
-                          <Tag key={s.id} color="gold">
-                            {s.name}
-                          </Tag>
-                        ))}
+                                  {/* Tags */}
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                                      {!!job.level && (
+                                          <span style={{ background: 'var(--color-primary-soft)', color: 'var(--color-primary-hover)', padding: '4px 12px', borderRadius: 100, fontSize: 12, fontWeight: 600 }}>
+                                              {job.level}
+                                          </span>
+                                      )}
+                                      <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 12px', borderRadius: 100, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                          <EnvironmentOutlined /> {getLocationLabel(job.location)}
+                                      </span>
+                                  </div>
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 700, fontSize: 16 }}>
+                                      <ThunderboltOutlined style={{ color: '#f59e0b' }} />
+                                      {(() => {
+                                          const min = job?.salaryMin;
+                                          const max = job?.salaryMax;
+                                          if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
+                                          const fmt = (v) => {
+                                              const num = Number(v || 0);
+                                              if (num >= 1000000) return `${(num / 1000000).toLocaleString('en-US')} triệu`;
+                                              return `${num.toLocaleString('en-US')} đ`;
+                                          };
+                                          if (min === max) return `${fmt(min)}`;
+                                          return `${fmt(min)} — ${fmt(max)}`;
+                                      })()}
+                                  </div>
+                              </div>
+                          </div>
                       </div>
-                    </div>
-                  </Card>
+                  </motion.div>
                 </Col>
               ))}
             </Row>

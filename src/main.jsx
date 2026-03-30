@@ -35,6 +35,7 @@ import JobAlertsPage from './pages/job/alerts.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import NotificationPage from './pages/admin/notification.jsx';
+import AdminDashboard from './pages/admin/dashboard.jsx';
 
 const router = createBrowserRouter([
   {
@@ -82,7 +83,7 @@ const router = createBrowserRouter([
       <LayoutAdmin />
     ),
     children: [
-      { index: true, element: <h1>Admin Dashboard</h1> },
+      { index: true, element: <AdminDashboard /> },
       { path: 'user', element: <PrivateRoute><UserTable /></PrivateRoute> },
       { path: 'job', element: <PrivateRoute><ManagePage /></PrivateRoute> },
       { path: 'company', element: <PrivateRoute><CompanyTable /></PrivateRoute> },

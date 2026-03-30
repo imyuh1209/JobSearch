@@ -38,10 +38,10 @@ const JobCard = ({ showPagination = false }) => {
     };
 
     useEffect(() => {
-        fetchJobs();
+        runFetch(keyword, filters, current, pageSize);
     }, [current, pageSize, keyword, filters]);
 
-    // Đọc tham số từ URL để đồng bộ từ khoá, bộ lọc và phân trang
+        // Đọc thông số từ URL để đồng bộ từ khoá, bộ lọc và phân trang
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const cat = (params.get("category") || "").trim();
@@ -57,18 +57,40 @@ const JobCard = ({ showPagination = false }) => {
         const page = pageRaw ? parseInt(pageRaw, 10) : 1;
         const size = sizeRaw ? parseInt(sizeRaw, 10) : 6;
 
+        const parsedFilters = {
+            level,
+            location: loc,
+            salaryMin: Number.isNaN(sMin) ? null : sMin,
+            salaryMax: Number.isNaN(sMax) ? null : sMax,
+            companyName: company,
+        };
+
         setKeyword(cat);
-        setFilters({ level, location: loc, salaryMin: Number.isNaN(sMin) ? null : sMin, salaryMax: Number.isNaN(sMax) ? null : sMax, companyName: company });
+        setFilters(parsedFilters);
         setCurrent(Number.isNaN(page) ? 1 : page);
         setPageSize(Number.isNaN(size) ? 6 : size);
-        // Đồng bộ giá trị lên Form
+
+        // Tái tạo câu tìm kiếm gốc để hiển thị lại trên ô Semantic Search
+        const parts = [];
+        if (cat) parts.push(cat);
+        if (company) parts.push(`@${company}`);
+        if (level) parts.push(level.toLowerCase());
+        if (loc) parts.push(`tại ${loc}`);
+        if (!Number.isNaN(sMin) && sMin) parts.push(`lương từ ${(sMin / 1_000_000).toLocaleString('vi')}tr`);
+        if (!Number.isNaN(sMax) && sMax) parts.push(`đến ${(sMax / 1_000_000).toLocaleString('vi')}tr`);
+        const reconstructed = parts.join(" ");
+
         form.setFieldsValue({
+            semanticQuery: reconstructed || undefined,
             level: level || undefined,
             location: loc || undefined,
             salaryMin: Number.isNaN(sMin) ? undefined : sMin,
             salaryMax: Number.isNaN(sMax) ? undefined : sMax,
             companyName: company || undefined,
         });
+
+        // Gọi fetch trực tiếp với giá trị đã parse — tránh stale-closure từ state chain
+        runFetch(cat, parsedFilters, Number.isNaN(page) ? 1 : page, Number.isNaN(size) ? 6 : size);
     }, [location.search]);
 
     // Tải danh sách công việc đã lưu để hiển thị trạng thái
@@ -93,25 +115,25 @@ const JobCard = ({ showPagination = false }) => {
         loadSaved();
     }, [user?.id]);
 
-    const fetchJobs = async () => {
+    // runFetch nhận params ường mịnh — tránh stale-closure khi gọi từ URL effect
+    const runFetch = async (kw, fil, page, size) => {
         setIsLoading(true);
-        const runQuery = async (page, size, pf) => {
-            const q = buildQuery(page, size, pf, { sort: "updatedAt,desc" });
+        const runQuery = async (p, s, pf) => {
+            const q = buildQuery(p, s, pf, { sort: "updatedAt,desc" });
             return await fetchAllJobAPI(q);
         };
 
         try {
-            // 1) Xây filters từ state hiện tại
+            // 1) Tìm theo tên việc làm
             const baseFilters = {};
-            if (keyword) baseFilters.name = keyword;
-            if (filters.level) baseFilters.level = filters.level;
-            if (filters.location && filters.location !== "ALL") baseFilters.location = filters.location;
-            if (filters.salaryMin != null) baseFilters.salaryMin = filters.salaryMin;
-            if (filters.salaryMax != null) baseFilters.salaryMax = filters.salaryMax;
-            if (filters.companyName) baseFilters["company.name"] = filters.companyName;
+            if (kw) baseFilters.name = kw;
+            if (fil.level) baseFilters.level = fil.level;
+            if (fil.location && fil.location !== "ALL") baseFilters.location = fil.location;
+            if (fil.salaryMin != null) baseFilters.salaryMin = fil.salaryMin;
+            if (fil.salaryMax != null) baseFilters.salaryMax = fil.salaryMax;
+            if (fil.companyName) baseFilters["company.name"] = fil.companyName;
 
-            // 2) Truy vấn lần đầu với điều kiện đầy đủ
-            let res = await runQuery(current, pageSize, baseFilters);
+            let res = await runQuery(page, size, baseFilters);
             let totalRes = res?.data?.meta?.total ?? 0;
             if (totalRes > 0) {
                 setDisplayJob(res.data.result);
@@ -120,7 +142,25 @@ const JobCard = ({ showPagination = false }) => {
                 return;
             }
 
-            // 3) Nếu không có kết quả, thử nới lỏng dần điều kiện
+            // 2) Nếu có keyword, thử tìm theo tên công ty
+            if (kw && !fil.companyName) {
+                const companyFilters = { "company.name": kw };
+                if (fil.level) companyFilters.level = fil.level;
+                if (fil.location && fil.location !== "ALL") companyFilters.location = fil.location;
+                if (fil.salaryMin != null) companyFilters.salaryMin = fil.salaryMin;
+                if (fil.salaryMax != null) companyFilters.salaryMax = fil.salaryMax;
+
+                res = await runQuery(page, size, companyFilters);
+                totalRes = res?.data?.meta?.total ?? 0;
+                if (totalRes > 0) {
+                    setDisplayJob(res.data.result);
+                    setTotal(totalRes);
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            // 3) Nới lỏng dần điều kiện
             const relaxSteps = [
                 { desc: "bỏ 'Lương đến'", apply: (f) => { const { salaryMax, ...rest } = f; return rest; } },
                 { desc: "bỏ 'Level'", apply: (f) => { const { level, ...rest } = f; return rest; } },
@@ -128,34 +168,28 @@ const JobCard = ({ showPagination = false }) => {
                 { desc: "bỏ 'Lương từ'", apply: (f) => { const { salaryMin, ...rest } = f; return rest; } },
                 {
                     desc: "chỉ lọc theo công ty", apply: (f) => {
-                        const next = { ...f };
-                        // keep only company filter if exists
-                        const company = next["company.name"];
-                        for (const k of Object.keys(next)) {
-                            if (k !== "company.name") delete next[k];
-                        }
-                        return company ? { "company.name": company } : {};
+                        const company = f["company.name"];
+                        return company ? { "company.name": company } : null;
                     }
                 },
-                { desc: "chỉ lọc theo từ khoá", apply: (f) => (f.name ? { name: f.name } : {}) },
+                { desc: "chỉ lọc theo tên việc làm", apply: (f) => (f.name ? { name: f.name } : null) },
                 { desc: "hiển thị tất cả công việc", apply: () => ({}) },
             ];
 
             for (const step of relaxSteps) {
                 const nextFilters = step.apply(baseFilters);
-                res = await runQuery(1, pageSize, nextFilters);
+                if (nextFilters === null) continue;
+                res = await runQuery(1, size, nextFilters);
                 totalRes = res?.data?.meta?.total ?? 0;
                 if (totalRes > 0) {
                     setDisplayJob(res.data.result);
                     setTotal(totalRes);
-                    // Thông báo để người dùng biết đã nới điều kiện
-                    message.info(`Không có kết quả với điều kiện hiện tại, đã ${step.desc}.`);
+                    message.info(`Không có kết quả chính xác, đã ${step.desc}.`);
                     setIsLoading(false);
                     return;
                 }
             }
 
-            // 4) Nếu vẫn không có kết quả, set rỗng
             setDisplayJob([]);
             setTotal(0);
         } catch (error) {
@@ -163,6 +197,9 @@ const JobCard = ({ showPagination = false }) => {
         }
         setIsLoading(false);
     };
+
+    // Wrapper để giữ tương thích với các nơi khác gọi fetchJobs()
+    const fetchJobs = () => runFetch(keyword, filters, current, pageSize);
 
     const handleSemanticSearch = async () => {
         try {
@@ -351,17 +388,18 @@ const JobCard = ({ showPagination = false }) => {
             <div className={styles["job-content"]}>
                 <Spin spinning={isLoading} tip="Đang tải...">
                     <Row gutter={[20, 20]}>
-                        <Col span={24}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className={isMobile ? "dflex-mobile" : "dflex-pc"}>
-                                <span className="title">
-                                    {keyword ? `Kết quả theo từ khoá: "${keyword}"` : "Việc Làm Mới Nhất"}
-                                </span>
-                                {!showPagination && <Link to="/job">Xem tất cả</Link>}
-                            </div>
-                        </Col>
+                        {showPagination && keyword && (
+                            <Col span={24}>
+                                <div style={{ marginBottom: 8 }}>
+                                    <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>
+                                        Kết quả: "{keyword}"
+                                    </h2>
+                                </div>
+                            </Col>
+                        )}
                         {showPagination && (
                             <Col span={24}>
-                                <Card size="small" style={{ marginTop: 8 }} className={styles["smart-search-card"]}>
+                                <div style={{ background: 'var(--card-bg)', borderRadius: 16, padding: '24px 24px 8px 24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border)', marginTop: 8, marginBottom: 16 }}>
                                     <Form form={form} layout="vertical" onFinish={handleFilterSubmit} className={styles["filter-grid"]}>
                                         <Row gutter={[8, 8]} align="middle">
                                             <Col xs={24} md={12} lg={8}>
@@ -409,87 +447,117 @@ const JobCard = ({ showPagination = false }) => {
                                                 </Form.Item>
                                             </Col>
                                         </Row>
-                                        <Row gutter={[8, 8]} style={{ marginTop: 6 }}>
+                                        <Row gutter={[8, 8]} style={{ marginTop: 12 }}>
                                             <Col span={24}>
                                                 <Form.Item>
                                                     <Space wrap>
-                                                        <Button type="primary" onClick={handleUnifiedSearch} loading={semanticLoading}>
-                                                            Phân tích & Lọc
+                                                        <Button type="primary" onClick={handleUnifiedSearch} loading={semanticLoading} style={{ background: 'linear-gradient(to right, #4f46e5, #6366f1)', border: 'none', boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)', borderRadius: 8, fontWeight: 600 }}>
+                                                            Phân tích & Tìm kiếm
                                                         </Button>
-                                                        <Button onClick={handleResetFilters}>Đặt lại</Button>
+                                                        <Button onClick={handleResetFilters} style={{ borderRadius: 8, fontWeight: 500 }}>Đặt lại</Button>
                                                     </Space>
                                                 </Form.Item>
                                             </Col>
                                         </Row>
                                     </Form>
-                                </Card>
+                                </div>
                             </Col>
                         )}
                         {displayJob.length > 0 ? (
                             displayJob.map((item) => (
                                 <Col span={24} md={12} key={item.id}>
                                     <motion.div
-                                        whileHover={{ y: -4, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                                        transition={{ duration: 0.2 }}
-                                        style={{ height: "100%" }}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className={styles["liquid-glass-card"]}
+                                        onClick={() => handleViewDetailJob(item)}
                                     >
-                                        <Card size="small" title={null} hoverable={true}
-                                            className={styles["job-card-wrapper"]}
-                                            onClick={() => handleViewDetailJob(item)}
-                                            style={{ height: "100%", display: "flex", flexDirection: "column" }}
-                                            bodyStyle={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+                                        {/* Premium Uiverse Heart Button Floating Top Right */}
+                                        <div 
+                                            style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}
+                                            onClick={(e) => e.stopPropagation()} /* Prevent card click */
                                         >
-                                            <div className={styles["card-job-content"]}>
-                                                <div className={styles["card-job-left"]}>
-                                                    <img
-                                                        alt="example"
-                                                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item?.company?.logo}`}
-                                                    />
-                                                </div>
-                                                <div className={styles["card-job-right"]}>
-                                                    <div className={styles["job-title"]}>
-                                                        {item.name}
+                                            <div className={styles["uiverse-heart-wrapper"]}>
+                                                {savingSet.has(item.id) && (
+                                                    <div style={{ position: 'absolute', zIndex: 20 }}>
+                                                        <Spin size="small" />
                                                     </div>
-                                                    {!!item.level && (
-                                                        <div style={{ margin: "4px 0 6px" }}>
-                                                            <Tag color="geekblue" style={{ borderRadius: 999, padding: "0 10px" }}>{item.level}</Tag>
-                                                        </div>
-                                                    )}
-                                                    <div className={styles["job-location"]}><EnvironmentOutlined style={{ color: '#58aaab' }} />&nbsp;{getLocationLabel(item.location)}</div>
-                                                    <div>
-                                                        <ThunderboltOutlined style={{ color: 'orange' }} />&nbsp;
-                                                        {(() => {
-                                                            const fmt = (v) => {
-                                                                const num = Number(v || 0);
-                                                                if (num >= 1000000) {
-                                                                    return `${(num / 1000000).toLocaleString('en-US')} triệu`;
-                                                                }
-                                                                return `${num.toLocaleString('en-US')} đ`;
-                                                            };
-                                                            const min = item?.salaryMin;
-                                                            const max = item?.salaryMax;
-                                                            if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
-                                                            if (min === max) return `${fmt(min)}`;
-                                                            return `${fmt(min)} — ${fmt(max)}`;
-                                                        })()}
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                                                <Button
-                                                    type="text"
-                                                    icon={savedIds.has(item.id) ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
-                                                    onClick={(e) => toggleSaveJob(item.id, e)}
-                                                    loading={savingSet.has(item.id)}
+                                                )}
+                                                <input 
+                                                    type="checkbox" 
+                                                    id={`save-job-${item.id}`} 
+                                                    className={styles["switch-input"]}
+                                                    checked={savedIds.has(item.id)}
+                                                    onChange={(e) => toggleSaveJob(item.id, e)}
                                                     disabled={savingSet.has(item.id)}
-                                                >
-                                                    {savedIds.has(item.id) ? "Đã lưu" : "Lưu"}
-                                                </Button>
+                                                />
+                                                <label className={styles["love-heart"]} htmlFor={`save-job-${item.id}`}>
+                                                    <i className={styles["round"]}></i>
+                                                    <div className={styles["bottom"]}></div>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+                                            {/* Logo Box */}
+                                            <div className={styles["glass-logo-box"]}>
+                                                <img
+                                                    alt={item?.company?.name}
+                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item?.company?.logo}`}
+                                                />
                                             </div>
 
-                                        </Card>
+                                            {/* Content info */}
+                                            <div style={{ flex: 1, minWidth: 0, paddingRight: 40 }}>
+                                                <div style={{ fontSize: 13, color: 'var(--color-primary)', fontWeight: 600, marginBottom: 4, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                                                    {item?.company?.name || 'Công ty ẩn danh'}
+                                                </div>
+                                                <h3 style={{
+                                                    fontSize: 18, fontWeight: 800, color: 'var(--color-text)', marginBottom: 12, lineHeight: 1.4,
+                                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                                                }}>
+                                                    {item.name}
+                                                </h3>
+
+                                                {/* Tags */}
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                                                    {!!item.level && (
+                                                        <span style={{ 
+                                                            background: 'var(--color-primary-soft)', color: 'var(--color-primary)', 
+                                                            padding: '4px 12px', border: '1px solid var(--color-primary-border)', 
+                                                            borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: '0.03em' 
+                                                        }}>
+                                                            {item.level}
+                                                        </span>
+                                                    )}
+                                                    <span style={{ 
+                                                        background: 'var(--color-bg-soft)', color: 'var(--color-text-secondary)', 
+                                                        padding: '4px 12px', border: '1px solid var(--color-border)', 
+                                                        borderRadius: 8, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 
+                                                    }}>
+                                                        <EnvironmentOutlined style={{ fontSize: 12 }} /> {getLocationLabel(item.location)}
+                                                    </span>
+                                                </div>
+
+                                                {/* Bottom Info: Salary */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-success)', fontWeight: 800, fontSize: 17 }}>
+                                                    <ThunderboltOutlined style={{ color: 'var(--color-warning)' }} />
+                                                    {(() => {
+                                                        const fmt = (v) => {
+                                                            const num = Number(v || 0);
+                                                            if (num >= 1000000) return `${(num / 1000000).toLocaleString('en-US')} triệu`;
+                                                            return `${num.toLocaleString('en-US')} đ`;
+                                                        };
+                                                        const min = item?.salaryMin;
+                                                        const max = item?.salaryMax;
+                                                        if ((min == null && max == null) || (min === 0 && max === 0)) return 'Thoả thuận';
+                                                        if (min === max) return `${fmt(min)}`;
+                                                        return `${fmt(min)} — ${fmt(max)}`;
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 </Col>
                             ))

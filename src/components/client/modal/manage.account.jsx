@@ -1,8 +1,8 @@
-import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification, Input, InputNumber } from 'antd';
+import { Modal, Tabs, Table, Form, Row, Col, Select, Button, message, notification, Input, InputNumber, Popconfirm, Tag } from 'antd';
 import { isMobile } from 'react-device-detect';
 import { useEffect, useState, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount, callChangePassword } from '../../../services/api.service';
+import { callFetchResumeByUser, fetchAllSkillAPI, callCreateSubscriber, callGetSubscriberSkills, callUpdateSubscriber, callUpdateUser, getAccount, callChangePassword, callDeleteResume } from '../../../services/api.service';
 import dayjs from 'dayjs';
 import { MonitorOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../context/auth.context";
@@ -15,24 +15,44 @@ export const UserResume = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    useEffect(() => {
-        const init = async () => {
-            setIsFetching(true);
-            const res = await callFetchResumeByUser();
-            if (res && res.data) {
-                const data = res.data.result || [];
-                setRawCV(data);
-                // Áp dụng bộ lọc từ query nếu có
-                const status = searchParams.get('status') || '';
-                const company = searchParams.get('company') || '';
-                const job = searchParams.get('job') || '';
-                form.setFieldsValue({ status, company, job });
-                setListCV(applyFilters(data, { status, company, job }));
-            }
-            setIsFetching(false);
+    const init = async () => {
+        setIsFetching(true);
+        const res = await callFetchResumeByUser();
+        if (res && res.data) {
+            const data = res.data.result || [];
+            setRawCV(data);
+            const status = searchParams.get('status') || '';
+            const company = searchParams.get('company') || '';
+            const job = searchParams.get('job') || '';
+            form.setFieldsValue({ status, company, job });
+            setListCV(applyFilters(data, { status, company, job }));
         }
+        setIsFetching(false);
+    }
+
+    useEffect(() => {
         init();
     }, [])
+
+    const handleCancelResume = async (id) => {
+        try {
+            const res = await callDeleteResume(id);
+            if (res && res.data) {
+                message.success("Huỷ ứng tuyển thành công!");
+                await init(); // Refresh list
+            } else {
+                notification.error({
+                    message: "Có lỗi xảy ra",
+                    description: res.message || "Vui lòng thử lại sau"
+                });
+            }
+        } catch (error) {
+            notification.error({
+                message: "Lỗi hệ thống",
+                description: error.message || "Không thể thực hiện huỷ ứng tuyển"
+            });
+        }
+    };
 
     // Lấy tên công ty từ nhiều nguồn
     const getCompanyName = (record) => {
@@ -137,9 +157,45 @@ export const UserResume = () => {
                 else if (url.startsWith('/storage/')) href = `${base}${url}`;
                 else if (url.startsWith('storage/')) href = `${base}/${url}`;
                 else href = `${base}/storage/resume/${url}`;
-                return (<a href={href} target="_blank" rel="noreferrer">Xem CV</a>);
+                return (<a href={href} target="_blank" rel="noreferrer" style={{ color: '#818cf8', fontWeight: 600 }}>Xem CV</a>);
             }
         },
+        {
+            title: 'Hành động',
+            width: 120,
+            render: (_, record) => {
+                const isPending = record.status === 'PENDING';
+                return (
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        {isPending ? (
+                            <Popconfirm
+                                title="Huỷ ứng tuyển"
+                                description="Bạn có chắc chắn muốn huỷ ứng tuyển công việc này không?"
+                                onConfirm={() => handleCancelResume(record.id)}
+                                okText="Đồng ý"
+                                cancelText="Quay lại"
+                                okButtonProps={{ danger: true }}
+                            >
+                                <Button 
+                                    size="small" 
+                                    danger 
+                                    style={{ 
+                                        borderRadius: 6, 
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        boxShadow: '0 0 8px rgba(255, 77, 79, 0.2)'
+                                    }}
+                                >
+                                    Huỷ bỏ
+                                </Button>
+                            </Popconfirm>
+                        ) : (
+                            <Tag color="default" style={{ margin: 0, opacity: 0.6 }}>Không thể huỷ</Tag>
+                        )}
+                    </div>
+                );
+            }
+        }
     ];
 
     return (

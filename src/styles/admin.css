@@ -1,0 +1,99 @@
+/* Admin Specific Styles - Tech Vanguard V3 */
+
+/* Glassmorphism Table Overrides */
+.admin-table-vanguard .ant-table {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+.admin-table-vanguard .ant-table-thead > tr > th {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 16px 20px !important;
+}
+
+.admin-table-vanguard .ant-table-tbody > tr > td {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    padding: 16px 20px !important;
+    transition: all 0.2s;
+}
+
+.admin-table-vanguard .ant-table-tbody > tr:hover > td {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Pagination Styling */
+.admin-table-vanguard .ant-pagination-item {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px;
+}
+
+.admin-table-vanguard .ant-pagination-item-active {
+    background: var(--color-primary-soft) !important;
+    border-color: var(--color-primary) !important;
+}
+
+.admin-table-vanguard .ant-pagination-item a {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Form & Input Overrides for Admin */
+.admin-form-vanguard .ant-input,
+.admin-form-vanguard .ant-input-password,
+.admin-form-vanguard .ant-input-number,
+.admin-form-vanguard .ant-select-selector {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    transition: all 0.3s;
+}
+
+.admin-form-vanguard .ant-input:focus,
+.admin-form-vanguard .ant-input-focused,
+.admin-form-vanguard .ant-select-focused .ant-select-selector {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* Stats Cards for Dashboard */
+.admin-stat-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(79, 70, 229, 0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.admin-stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 100px;
+    height: 100px;
+    background: var(--color-primary);
+    filter: blur(60px);
+    opacity: 0.1;
+    pointer-events: none;
+}
