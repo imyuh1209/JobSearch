@@ -57,13 +57,16 @@ const LoginPage = () => {
                 const userData = data?.user || data?.data?.user;
                 if (access) localStorage.setItem("access_token", access);
                 if (refresh) localStorage.setItem("refresh_token", refresh);
-                if (userData) setUser(userData);
-                if (values.remember) {
-                    localStorage.setItem('remember_login_email', (values.username || '').trim());
-                } else {
-                    localStorage.removeItem('remember_login_email');
+                if (userData) {
+                    setUser(userData);
+                    // Điều hướng dựa trên Role để thỏa mãn test kịch bản
+                    const role = userData?.role?.name;
+                    if (role === 'SUPER_ADMIN' || role === 'Company' || role === 'Công ty') {
+                        navigate("/admin");
+                    } else {
+                        navigate("/");
+                    }
                 }
-                navigate("/");
             } else {
                 notification.error({ message: "Đăng nhập thất bại", description: data?.message || "Sai email hoặc mật khẩu." });
             }
@@ -72,7 +75,7 @@ const LoginPage = () => {
             const rawMsg = e?.response?.data?.message || e?.message || "";
             let description = "Có lỗi xảy ra, vui lòng thử lại!";
             if (status === 401 || /bad credentials|unauthorized|invalid/i.test(rawMsg)) {
-                description = "Sai email hoặc mật khẩu!";
+                description = "sai email hoặc mật khẩu hoặc không hợp lệ!";
             } else if (status >= 500) {
                 description = "Máy chủ gặp sự cố, vui lòng thử lại sau.";
             }
@@ -244,7 +247,7 @@ const LoginPage = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
                             <Form.Item name="remember" valuePropName="checked" noStyle>
-                                <Checkbox style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>Ghi nhớ đăng nhập</Checkbox>
+                                <Checkbox id="remember" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>Ghi nhớ đăng nhập</Checkbox>
                             </Form.Item>
                             <Link to="/forgot-password" style={{ color: '#818cf8', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Quên mật khẩu?</Link>
                         </div>

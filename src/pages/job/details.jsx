@@ -13,7 +13,8 @@ import {
   Tooltip,
   Alert,
   message,
-  notification
+  notification,
+  Spin
 } from "antd";
 import {
   DollarOutlined,
@@ -296,32 +297,24 @@ const toggleSave = async () => {
         <Space>
           <div 
             style={{ 
-              display: 'flex', alignItems: 'center', gap: 12, 
+              display: 'flex', alignItems: 'center', gap: 8, 
               padding: '4px 16px', border: '1px solid var(--color-border)', 
               borderRadius: 12, background: 'var(--color-bg)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              height: 40
             }}
             onClick={() => !saving && toggleSave()}
           >
-            <div className={styles["uiverse-heart-wrapper"]}>
-              {saving && (
-                <div style={{ position: 'absolute', zIndex: 20 }}>
-                  <Spin size="small" />
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, position: 'relative' }}>
+              {saving ? (
+                <Spin size="small" />
+              ) : isSaved ? (
+                <HeartFilled style={{ color: '#f43f5e', fontSize: 20 }} />
+              ) : (
+                <HeartOutlined style={{ fontSize: 20, color: 'var(--color-text-secondary)' }} />
               )}
-              <input 
-                type="checkbox" 
-                id={`save-job-detail-${jobDetail?.id}`} 
-                className={styles["switch-input"]}
-                checked={isSaved}
-                readOnly /* Handled by parent div click */
-              />
-              <label className={styles["love-heart"]} htmlFor={`save-job-detail-${jobDetail?.id}`}>
-                <i className={styles["round"]}></i>
-                <div className={styles["bottom"]}></div>
-              </label>
             </div>
-            <Text strong style={{ minWidth: 60 }}>{isSaved ? "Đã lưu" : "Lưu tin"}</Text>
+            <Text strong style={{ minWidth: 60, lineHeight: '24px' }}>{isSaved ? "Đã lưu" : "Lưu tin"}</Text>
           </div>
           <Tooltip title="Chia sẻ">
             <Button icon={<ShareAltOutlined />} onClick={handleShare} />

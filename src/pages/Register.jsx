@@ -148,10 +148,10 @@ const RegisterPage = () => {
 
                     <Form layout="vertical" form={form} name="register_form" onFinish={onFinish} size="large">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>HỌ VÀ TÊN</span>} name="name" rules={[{ required: true, message: 'Bắt buộc!' }, { min: 2, message: 'Tối thiểu 2 ký tự' }]}>
+                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>HỌ VÀ TÊN</span>} name="name" rules={[{ required: true, message: 'nhập tên' }, { min: 2, message: 'nhập tên' }]}>
                                 <Input placeholder="Nguyễn Văn A" style={inputStyle} />
                             </Form.Item>
-                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>GIỚI TÍNH</span>} name="gender" rules={[{ required: true, message: 'Bắt buộc!' }]}>
+                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>GIỚI TÍNH</span>} name="gender" rules={[{ required: false, message: 'bắt buộc' }]}>
                                 <Select placeholder="Chọn..." style={{ borderRadius: 12 }}
                                     dropdownStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}
                                 >
@@ -164,15 +164,15 @@ const RegisterPage = () => {
                         <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>EMAIL</span>} name="email" rules={[{ required: true, message: 'Bắt buộc!' }, { type: 'email', message: 'Email không hợp lệ!' }]}>
                             <Input placeholder="you@example.com" style={inputStyle} />
                         </Form.Item>
-                        <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>ĐỊA CHỈ</span>} name="address" rules={[{ required: true, message: 'Bắt buộc!' }, { min: 5, message: 'Địa chỉ quá ngắn' }]}>
+                        <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>ĐỊA CHỈ</span>} name="address" rules={[{ required: false, message: 'bắt buộc' }]}>
                             <Input placeholder="Hà Nội, TP.HCM..." style={inputStyle} />
                         </Form.Item>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>MẬT KHẨU</span>} name="password" rules={[{ required: true, message: 'Bắt buộc!' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]}>
+                            <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>MẬT KHẨU</span>} name="password" rules={[{ required: true, message: 'ngắn' }, { min: 6, message: 'ngắn' }]}>
                                 <Input.Password placeholder="••••••••" style={inputStyle} />
                             </Form.Item>
                             <Form.Item label={<span style={labelStyle}><span style={{ color: '#f43f5e' }}>* </span>XÁC NHẬN MẬT KHẨU</span>} name="confirm" dependencies={["password"]} rules={[
-                                { required: true, message: 'Bắt buộc!' },
+                                { required: true, message: 'ngắn' },
                                 ({ getFieldValue }) => ({
                                     validator(_, value) {
                                         if (!value || getFieldValue('password') === value) return Promise.resolve();

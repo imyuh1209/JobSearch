@@ -7,7 +7,8 @@ import {
   SearchOutlined,
   UserAddOutlined,
   BulbOutlined,
-  BellOutlined, // <-- Thêm icon chuông
+  BellOutlined,
+  SolutionOutlined, // icon cho CV
 } from "@ant-design/icons";
 import { Input, Menu, notification, Dropdown, Space, Button, Avatar, Badge, Popover, List, Typography, Empty } from "antd";
 import { useContext, useState, useEffect } from "react";
@@ -133,20 +134,16 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
 
   const handleLogout = async () => {
     try {
-      const res = await logoutUserAPI();
-      if (res && res.statusCode === 200) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setUser({ email: "", name: "", id: "" });
-        notification.success({ message: "Đăng xuất thành công!" });
-        navigate("/");
-      } else {
-        notification.error({ message: "Đăng xuất thất bại!" });
-      }
+      await logoutUserAPI();
     } catch (error) {
-      console.error("Error during logout:", error);
-      notification.error({ message: "Có lỗi xảy ra khi đăng xuất!" });
+      console.error("Error during logout API call:", error);
     }
+    // Luôn luôn xóa token và điều hướng ở phía client để đảm bảo logout thành công
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setUser({ email: "", name: "", id: "" });
+    notification.success({ message: "Đăng xuất thành công!" });
+    navigate("/");
   };
 
   // Main navigation items (left)
@@ -166,6 +163,11 @@ const Header = ({ isDarkTheme, onToggleTheme }) => {
       icon: <FileTextOutlined />,
       label: <NavLink to="/job">Việc làm</NavLink>,
     },
+    ...(user?.id ? [{
+      key: "my-cv",
+      icon: <SolutionOutlined />,
+      label: <NavLink to="/my-cv">CV cá nhân</NavLink>,
+    }] : []),
   ];
 
   // Auth actions (right)

@@ -39,7 +39,7 @@ const ForgotPasswordPage = () => {
             <div style={{ width: 400, padding: 24, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Quên mật khẩu</h2>
                 <Form
-                    name="forgot-password"
+                    name="forgot_password_form"
                     onFinish={onFinish}
                     layout="vertical"
                 >

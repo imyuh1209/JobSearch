@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Card, Form, Input, InputNumber, Switch, Button, Table, Space, message, notification, Select, Tag, Checkbox } from 'antd';
+import { Card, Form, Input, InputNumber, Switch, Button, Table, Space, message, notification, Select, Tag, Checkbox, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 import { AuthContext } from '../../components/context/auth.context';
 import { 
@@ -201,64 +201,81 @@ const JobAlertsPage = () => {
   // Web Push removed per request
 
   return (
-    <div style={{ maxWidth: 960, margin: '24px auto', padding: '0 12px' }}>
-      <Card title="Tạo Job Alert" style={{ marginBottom: 16 }}>
-        <Form form={form} layout="vertical" onFinish={onCreate}>
-          {!user?.id && (
-            <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }]}> 
-              <Input placeholder="Nhập email để nhận job mới" allowClear />
-            </Form.Item>
-          )}
-          <Form.Item label="Từ khóa" name="keywords">
-            <Input placeholder="ví dụ: React, Java, Node" allowClear />
-          </Form.Item>
-          <Form.Item label="Địa điểm" name="location">
-            <Input placeholder="ví dụ: Hà Nội, Hồ Chí Minh" allowClear />
-          </Form.Item>
-          <Form.Item label="Mức lương" style={{ marginBottom: 0 }}>
-            <Space.Compact style={{ width: '100%' }}>
-              <Form.Item name="salaryMin" style={{ flex: 1 }}>
-                <InputNumber style={{ width: '100%' }} min={0} placeholder="Tối thiểu" />
-              </Form.Item>
-              <Form.Item name="salaryMax" style={{ flex: 1 }}>
-                <InputNumber style={{ width: '100%' }} min={0} placeholder="Tối đa" />
-              </Form.Item>
-            </Space.Compact>
-          </Form.Item>
-          <Form.Item label="Cấp độ (Level)" name="level">
-            <Select allowClear options={levels} placeholder="Chọn cấp độ công việc" />
-          </Form.Item>
-          <Form.Item label="Công ty" name="company">
-            <Input placeholder="Tên công ty" allowClear />
-          </Form.Item>
-          <Form.Item label="Tần suất" name="frequency" initialValue={'daily'}>
-            <Select options={[{ label: 'Hàng ngày', value: 'daily' }, { label: 'Hàng tuần', value: 'weekly' }]} />
-          </Form.Item>
-          {!user?.id && (
-            <Form.Item name="consent" valuePropName="checked" rules={[{ validator: (_, v) => v ? Promise.resolve() : Promise.reject(new Error('Cần đồng ý nhận thông tin')) }]}>
-              <Checkbox>Tôi đồng ý nhận thông tin và có thể hủy bất kỳ lúc nào</Checkbox>
-            </Form.Item>
-          )}
-          <Form.Item name="enabled" label="Bật Alert" valuePropName="checked" initialValue={true}><Switch /></Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={loadingCreate}>Tạo Job Alert</Button>
-          </Space>
-        </Form>
-      </Card>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+      <div style={{ paddingTop: 120, paddingBottom: 48, borderBottom: '1px solid var(--color-border)', marginBottom: 40 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(79,70,229,0.08)', border: '1px solid rgba(79,70,229,0.15)', borderRadius: 9999, padding: '4px 14px', marginBottom: 16 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4f46e5', display: 'inline-block' }}></span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4f46e5', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tài khoản</span>
+        </div>
+        <h1 style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-text)', margin: '0 0 10px', letterSpacing: '-0.03em' }}>Thông báo việc làm</h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 15, margin: 0 }}>
+          Nhận thông báo qua email khi có công việc mới phù hợp với tiêu chí của bạn.
+        </p>
+      </div>
 
-      <Card title="Job Alerts của tôi">
-        {user?.id ? (
-          <Table rowKey={(r) => r.id} columns={columns} dataSource={list} loading={loadingList} pagination={false} />
-        ) : (
-          <div>
-            <Space style={{ marginBottom: 12 }}>
-              <Input style={{ width: 280 }} value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="Nhập email đã tạo alert" />
-              <Button onClick={() => guestEmail ? fetchList(guestEmail) : message.warning('Vui lòng nhập email')}>Tải</Button>
-            </Space>
-            <Table rowKey={(r) => r.id} columns={columns} dataSource={list} loading={loadingList} pagination={false} />
+      <Row gutter={[24, 24]}>
+        <Col xs={24} lg={8}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: 16, padding: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Tạo Job Alert</h2>
+            <Form form={form} layout="vertical" onFinish={onCreate}>
+              {!user?.id && (
+                <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }]}> 
+                  <Input placeholder="Nhập email để nhận job mới" allowClear />
+                </Form.Item>
+              )}
+              <Form.Item label="Từ khóa" name="keywords">
+                <Input placeholder="ví dụ: React, Java, Node" allowClear />
+              </Form.Item>
+              <Form.Item label="Địa điểm" name="location">
+                <Input placeholder="ví dụ: Hà Nội, Hồ Chí Minh" allowClear />
+              </Form.Item>
+              <Form.Item label="Mức lương" style={{ marginBottom: 0 }}>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Form.Item name="salaryMin" style={{ flex: 1 }}>
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="Tối thiểu" />
+                  </Form.Item>
+                  <Form.Item name="salaryMax" style={{ flex: 1 }}>
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="Tối đa" />
+                  </Form.Item>
+                </Space.Compact>
+              </Form.Item>
+              <Form.Item label="Cấp độ (Level)" name="level">
+                <Select allowClear options={levels} placeholder="Chọn cấp độ công việc" />
+              </Form.Item>
+              <Form.Item label="Công ty" name="company">
+                <Input placeholder="Tên công ty" allowClear />
+              </Form.Item>
+              <Form.Item label="Tần suất" name="frequency" initialValue={'daily'}>
+                <Select options={[{ label: 'Hàng ngày', value: 'daily' }, { label: 'Hàng tuần', value: 'weekly' }]} />
+              </Form.Item>
+              {!user?.id && (
+                <Form.Item name="consent" valuePropName="checked" rules={[{ validator: (_, v) => v ? Promise.resolve() : Promise.reject(new Error('Cần đồng ý nhận thông tin')) }]}>
+                  <Checkbox>Tôi đồng ý nhận thông tin và có thể hủy bất kỳ lúc nào</Checkbox>
+                </Form.Item>
+              )}
+              <Form.Item name="enabled" label="Bật Alert" valuePropName="checked" initialValue={true}><Switch /></Form.Item>
+              <Button type="primary" htmlType="submit" loading={loadingCreate} block size="large" style={{ borderRadius: 8 }}>Tạo Job Alert</Button>
+            </Form>
           </div>
-        )}
-      </Card>
+        </Col>
+
+        <Col xs={24} lg={16}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: 16, padding: 24, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Job Alerts của tôi</h2>
+            {user?.id ? (
+              <Table rowKey={(r) => r.id} columns={columns} dataSource={list} loading={loadingList} pagination={false} scroll={{ x: 'max-content' }} />
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <p style={{ color: 'var(--color-text-secondary)', marginBottom: 16 }}>Vui lòng nhập email để xem danh sách Job Alerts của bạn.</p>
+                <Space>
+                  <Input placeholder="Nhập email của bạn" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} style={{ width: 250 }} />
+                  <Button type="primary" onClick={() => fetchList(guestEmail)}>Xem danh sách</Button>
+                </Space>
+              </div>
+            )}
+          </div>
+        </Col>
+      </Row>
     </div>
   );
 };

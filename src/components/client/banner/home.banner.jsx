@@ -158,7 +158,7 @@ const HomeBannerCarousel = () => {
               <input
                 type="text"
                 className={styles.input}
-                placeholder="Nhập tên công việc, công ty..."
+                placeholder="Nhập tên công việc, công ty, vị trí..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => {
