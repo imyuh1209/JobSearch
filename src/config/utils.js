@@ -82,7 +82,7 @@ export const LOCATION_LIST = [
     { label: "ALL", value: "ALL" },
     // Thành phố trực thuộc trung ương
     { label: "Hà Nội", value: "HANOI" },
-    { label: "Hồ Chí Minh", value: "HOCHIMINH" },
+    { label: "Hồ Chí Minh", value: "HCM" },
     { label: "Đà Nẵng", value: "DANANG" },
     { label: "Hải Phòng", value: "HAIPHONG" },
     { label: "Cần Thơ", value: "CANTHO" },

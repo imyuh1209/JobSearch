@@ -56,6 +56,9 @@ const JobCard = ({ showPagination = false }) => {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const cat = (params.get("category") || "").trim();
+        const q = (params.get("q") || "").trim();
+        const keywordValue = cat || q;
+
         const level = (params.get("level") || "").trim();
         const loc = (params.get("location") || "").trim();
         const sMinRaw = params.get("salaryMin");
@@ -77,7 +80,7 @@ const JobCard = ({ showPagination = false }) => {
             companyName: company,
         };
 
-        setKeyword(cat);
+        setKeyword(keywordValue);
         setFilters(parsedFilters);
         setCurrent(Number.isNaN(page) ? 1 : page);
         setPageSize(Number.isNaN(size) ? 6 : size);
@@ -85,7 +88,7 @@ const JobCard = ({ showPagination = false }) => {
 
         // Tái tạo câu tìm kiếm gốc để hiển thị lại trên ô Semantic Search
         const parts = [];
-        if (cat) parts.push(cat);
+        if (keywordValue) parts.push(keywordValue);
         if (company) parts.push(`@${company}`);
         if (level) parts.push(level.toLowerCase());
         if (loc) parts.push(`tại ${loc}`);
@@ -103,7 +106,7 @@ const JobCard = ({ showPagination = false }) => {
         });
 
         // Gọi fetch trực tiếp với giá trị đã parse — tránh stale-closure từ state chain
-        runFetch(cat, parsedFilters, Number.isNaN(page) ? 1 : page, Number.isNaN(size) ? 6 : size, sortRaw);
+        runFetch(keywordValue, parsedFilters, Number.isNaN(page) ? 1 : page, Number.isNaN(size) ? 6 : size, sortRaw);
     }, [location.search]);
 
     // Tải danh sách công việc đã lưu để hiển thị trạng thái
@@ -203,8 +206,8 @@ const JobCard = ({ showPagination = false }) => {
                     }
                 },
                 { desc: "chỉ lọc theo tên việc làm", apply: (f) => (f.name ? { name: f.name } : null) },
-                { desc: "hiển thị tất cả công việc", apply: () => ({}) },
             ];
+
 
             for (const step of relaxSteps) {
                 const nextFilters = step.apply(baseFilters);
@@ -418,17 +421,16 @@ const JobCard = ({ showPagination = false }) => {
                 <Spin spinning={isLoading} tip="Đang tải...">
                     {showPagination && (
                         <div style={{ marginBottom: 24 }}>
-                            {keyword && (
-                                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>
-                                        Kết quả: "{keyword}"
-                                    </h2>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', fontWeight: 500 }}>Sắp xếp:</span>
+                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>
+                                    {keyword ? `Kết quả: "${keyword}"` : "Tất cả công việc"}
+                                </h2>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', fontWeight: 500 }}>Sắp xếp:</span>
+                                    <div id="sort-select" style={{ display: 'inline-block', width: 180 }}>
                                         <Select
-                                            id="sort-select"
                                             value={sort}
-                                            style={{ width: 180 }}
+                                            style={{ width: '100%' }}
                                             onChange={(val) => updateURL({ sort: val, page: 1 })}
                                             options={[
                                                 { label: "Mới nhất", value: "updatedAt,desc" },
@@ -438,7 +440,8 @@ const JobCard = ({ showPagination = false }) => {
                                         />
                                     </div>
                                 </div>
-                            )}
+                            </div>
+
                             <div style={{ background: 'var(--card-bg)', borderRadius: 16, padding: '24px 24px 8px 24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border)' }}>
                                 <Form form={form} layout="vertical" onFinish={handleFilterSubmit} className={styles["filter-grid"]}>
                                     <Row gutter={[8, 8]} align="middle">
@@ -459,22 +462,26 @@ const JobCard = ({ showPagination = false }) => {
                                         </Col>
                                         <Col xs={12} md={6} lg={4}>
                                             <Form.Item name="level" label="Level">
-                                                <Select id="filter-level-dropdown" placeholder="Chọn level" allowClear>
-                                                    <Select.Option value="INTERN">INTERN</Select.Option>
-                                                    <Select.Option value="FRESHER">FRESHER</Select.Option>
-                                                    <Select.Option value="JUNIOR">JUNIOR</Select.Option>
-                                                    <Select.Option value="MIDDLE">MIDDLE</Select.Option>
-                                                    <Select.Option value="SENIOR">SENIOR</Select.Option>
-                                                </Select>
+                                                <div id="filter-level-dropdown" style={{ width: '100%' }}>
+                                                    <Select placeholder="Chọn level" allowClear style={{ width: '100%' }}>
+                                                        <Select.Option value="INTERN">INTERN</Select.Option>
+                                                        <Select.Option value="FRESHER">FRESHER</Select.Option>
+                                                        <Select.Option value="JUNIOR">JUNIOR</Select.Option>
+                                                        <Select.Option value="MIDDLE">MIDDLE</Select.Option>
+                                                        <Select.Option value="SENIOR">SENIOR</Select.Option>
+                                                    </Select>
+                                                </div>
                                             </Form.Item>
                                         </Col>
                                         <Col xs={12} md={6} lg={4}>
                                             <Form.Item name="location" label="Địa điểm">
-                                                <Select id="filter-location-dropdown" placeholder="Chọn địa điểm" allowClear>
-                                                    {LOCATION_LIST.map((loc) => (
-                                                        <Select.Option key={loc.value} value={loc.value}>{loc.label}</Select.Option>
-                                                    ))}
-                                                </Select>
+                                                <div id="filter-location-dropdown" style={{ width: '100%' }}>
+                                                    <Select placeholder="Chọn địa điểm" allowClear style={{ width: '100%' }}>
+                                                        {LOCATION_LIST.map((loc) => (
+                                                            <Select.Option key={loc.value} value={loc.value}>{loc.label}</Select.Option>
+                                                        ))}
+                                                    </Select>
+                                                </div>
                                             </Form.Item>
                                         </Col>
                                         <Col xs={12} md={6} lg={4}>
@@ -559,7 +566,7 @@ const JobCard = ({ showPagination = false }) => {
                                 {isLoading ? (
                                     Array(pageSize).fill(0).map((_, i) => (
                                         <Col span={24} lg={showPagination ? 12 : 8} key={`skeleton-${i}`}>
-                                            <Card className={styles["liquid-glass-card"]} bordered={false}>
+                                            <Card data-testid="job-skeleton" className={styles["liquid-glass-card"]} bordered={false}>
                                                 <div style={{ display: 'flex', gap: 20 }}>
                                                     <div style={{ width: 80, height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.05)' }}></div>
                                                     <div style={{ flex: 1 }}>
@@ -663,7 +670,9 @@ const JobCard = ({ showPagination = false }) => {
                                     ))
                                 ) : (
                                     <Col span={24}>
-                                        <Empty description="Không có dữ liệu" />
+                                        <div style={{ textAlign: 'center', padding: '40px 0', background: 'var(--card-bg)', borderRadius: 16 }}>
+                                            <div id="empty-message-text" style={{ fontSize: 18, color: 'var(--color-text-secondary)' }}>Không có dữ liệu</div>
+                                        </div>
                                     </Col>
                                 )}
                             </Row>

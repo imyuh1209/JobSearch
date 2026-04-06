@@ -27,7 +27,7 @@ const toVND = (num, unit) => {
 // Known location aliases mapped to code values used by backend
 const LOCATION_ALIAS = {
   HANOI: ["hn", "ha noi", "hanoi", "ha-noi", "hà nội"],
-  HOCHIMINH: [
+  HCM: [
     "hcm", "tp hcm", "tp.hcm", "hcmc", "ho chi minh",
     "ho-chi-minh", "sai gon", "saigon", "sg", "sài gòn",
   ],
@@ -67,7 +67,9 @@ const extractLocation = (normText, originalText) => {
 
     for (const loc of sortedList) {
       const labelNorm = removeAccents(String(loc.label || "")).toLowerCase();
-      if (normText.includes(labelNorm)) {
+      // Use regex with word boundaries to avoid partial matches
+      const regex = new RegExp(`\\b${labelNorm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (regex.test(normText)) {
         return { code: loc.value, matchedText: findOriginalMatch(labelNorm) };
       }
     }
@@ -77,9 +79,11 @@ const extractLocation = (normText, originalText) => {
     const sortedAliases = [...aliases].sort((a, b) => b.length - a.length);
     for (const a of sortedAliases) {
       const aNorm = removeAccents(a.toLowerCase());
-      const idx = normText.indexOf(aNorm);
-      if (idx !== -1) {
-        return { code: c, matchedText: originalText.substring(idx, idx + aNorm.length) };
+      // Use word boundaries (\b) to ensure we matching full words like 'ct' but not within 'React'
+      const regex = new RegExp(`\\b${aNorm}\\b`, "i");
+      if (regex.test(normText)) {
+        const matchIdx = normText.search(regex);
+        return { code: c, matchedText: originalText.substring(matchIdx, matchIdx + aNorm.length) };
       }
     }
   }
@@ -91,9 +95,11 @@ const extractLevel = (normText, originalText) => {
   for (const [code, aliases] of Object.entries(LEVEL_ALIAS)) {
     for (const a of aliases) {
       const aNorm = removeAccents(a.toLowerCase());
-      const idx = normText.indexOf(aNorm);
-      if (idx !== -1) {
-        return { code, matchedText: originalText.substring(idx, idx + aNorm.length) };
+      // Use word boundaries (\b) to avoid partial matches
+      const regex = new RegExp(`\\b${aNorm}\\b`, "i");
+      if (regex.test(normText)) {
+        const matchIdx = normText.search(regex);
+        return { code, matchedText: originalText.substring(matchIdx, matchIdx + aNorm.length) };
       }
     }
   }
@@ -145,6 +151,16 @@ export const parseSemanticQuery = (input = "") => {
 
   // Strip exactly what was found
   let keyword = text;
+
+  // Use a reliable way to strip matched items without partial string issues
+  const strip = (fullText, subText) => {
+      if (!subText) return fullText;
+      // We escape special regex chars to match literally
+      const escaped = subText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // Use word boundaries if possible, but location markers like 'at HN' are better handled separately
+      return fullText.replace(new RegExp(`\\b${escaped}\\b`, "gi"), " ").replace(/\s\s+/g, " ");
+  };
+
   if (salary.matchedText) keyword = keyword.replace(salary.matchedText, " ");
   if (loc.matchedText) {
       // Find "at/in" markers near the location and strip them too
@@ -152,10 +168,10 @@ export const parseSemanticQuery = (input = "") => {
       if (pattern.test(keyword)) {
           keyword = keyword.replace(pattern, " ");
       } else {
-          keyword = keyword.replace(loc.matchedText, " ");
+          keyword = strip(keyword, loc.matchedText);
       }
   }
-  if (lvl.matchedText) keyword = keyword.replace(lvl.matchedText, " ");
+  if (lvl.matchedText) keyword = strip(keyword, lvl.matchedText);
   if (comp.matchedText) keyword = keyword.replace(comp.matchedText, " ");
 
   // Final cleanup of stop words and whitespace
