@@ -40,7 +40,6 @@ import styles from "../../styles/client.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { callSaveJob, callUnsaveByJobId, callIsSavedJob } from "../../services/api.service";
-import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth.context";
 
 dayjs.extend(relativeTime);
