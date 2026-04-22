@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useContext } from "react";
+import { getCompanyLogoUrl } from "../../utils/logoHelper";
 import {
   Row,
   Col,
@@ -268,8 +269,8 @@ const toggleSave = async () => {
   const companyLogo = useMemo(() => {
     const logo = jobDetail?.company?.logo;
     if (!logo) return null;
-    return `${backend}/storage/company/${logo}`;
-  }, [backend, jobDetail]);
+    return getCompanyLogoUrl(logo);
+  }, [jobDetail]);
 
   const handleShare = async () => {
     try {

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { getCompanyLogoUrl } from "../../utils/logoHelper";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Row,
@@ -112,7 +113,7 @@ const ClientCompanyDetailPage = () => {
                     }}>
                       <img
                         alt={companyDetail?.name}
-                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${companyDetail?.logo}`}
+                        src={getCompanyLogoUrl(companyDetail?.logo)}
                         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                       />
                     </div>
@@ -215,7 +216,7 @@ const ClientCompanyDetailPage = () => {
                               }}>
                                   <img
                                       alt={job?.company?.name}
-                                      src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${job?.company?.logo}`}
+                                      src={getCompanyLogoUrl(job?.company?.logo)}
                                       style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                   />
                               </div>

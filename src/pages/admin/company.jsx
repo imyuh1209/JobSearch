@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { getCompanyLogoUrl } from "../../utils/logoHelper";
 import { Table, Space, Popconfirm, message, Button, Input, Form } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { fetchAllCompanyAPI, deleteCompanyAPI } from "../../services/api.service";
@@ -120,7 +121,7 @@ const CompanyTable = () => {
             dataIndex: "logo",
             render: (logo) => (
                 <img
-                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${logo}`}
+                src={getCompanyLogoUrl(logo)}
                     alt="logo"
                     style={{ width: 50, height: 50, objectFit: 'cover' }}
                 />

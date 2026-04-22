@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { getCompanyLogoUrl } from "../../utils/logoHelper";
 import { Card, Row, Col, Empty, message, Popconfirm, Button, Space, Tag } from "antd";
 import { EnvironmentOutlined, ThunderboltOutlined, DeleteOutlined } from "@ant-design/icons";
 import { callFetchSavedJobs, callDeleteSavedJobBySavedId } from "../../services/api.service";
@@ -106,18 +107,15 @@ export default function SavedJobsPage() {
                               width: 72, height: 72, borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc',
                               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 8
                           }}>
-                              {(() => {
-                                  const backend = import.meta.env.VITE_BACKEND_URL;
-                                  const isAbsolute = typeof it.companyLogo === 'string' && /^https?:\/\//.test(it.companyLogo);
-                                  const src = isAbsolute ? it.companyLogo : `${backend}/storage/company/${it.companyLogo}`;
-                                  return (
-                                      <img
-                                          alt={it.companyName}
-                                          src={src}
-                                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                      />
-                                  );
-                              })()}
+                              {
+                                   return (
+                                       <img
+                                           alt={it.companyName}
+                                           src={getCompanyLogoUrl(it.companyLogo)}
+                                           style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                       />
+                                   );
+                              }
                           </div>
 
                           {/* Content info */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { getCompanyLogoUrl } from "../../../utils/logoHelper";
 import { motion } from "framer-motion";
 import { Card, Col, Row, Divider, Pagination, Spin, Empty } from "antd";
 import { fetchAllCompanyAPI } from "../../../services/api.service";
@@ -95,7 +96,7 @@ const CompanyCard = ({ showPagination = false, isCarousel = false }) => {
                                     <div className="carousel-logo">
                                         <img
                                             alt={item.name}
-                                            src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item.logo}`}
+                                            src={getCompanyLogoUrl(item.logo)}
                                             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }}
                                             draggable={false}
                                         />
@@ -156,7 +157,7 @@ const CompanyCard = ({ showPagination = false, isCarousel = false }) => {
                                             }}>
                                                 <img
                                                     alt={item.name}
-                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item.logo}`}
+                                                    src={getCompanyLogoUrl(item.logo)}
                                                     style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                                 />
                                             </div>

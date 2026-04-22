@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { getCompanyLogoUrl } from "../../../utils/logoHelper";
 import { motion } from "framer-motion";
 import { Card, Col, Row, Divider, Pagination, Spin, Empty, Form, Select, InputNumber, Button, Space, message, Input, Tag } from "antd";
 import { fetchAllJobAPI, callSaveJob, callFetchSavedJobs, callUnsaveByJobId, callDeleteSavedJobBySavedId, fetchAllCompanyAPI } from "../../../services/api.service";
@@ -542,7 +543,7 @@ const JobCard = ({ showPagination = false }) => {
                                                         className={styles["company-sidebar-item"]}
                                                     >
                                                         <img 
-                                                            src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${c.logo}`} 
+                                                            src={getCompanyLogoUrl(c.logo)}
                                                             alt={c.name} 
                                                             style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 4, background: '#fff' }}
                                                         />
@@ -614,7 +615,7 @@ const JobCard = ({ showPagination = false }) => {
                                                     <div className={styles["glass-logo-box"]}>
                                                         <img
                                                             alt={item?.company?.name}
-                                                            src={`${import.meta.env.VITE_BACKEND_URL}/storage/company/${item?.company?.logo}`}
+                                                            src={getCompanyLogoUrl(item?.company?.logo)}
                                                         />
                                                     </div>
 
