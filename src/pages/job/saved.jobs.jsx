@@ -107,15 +107,11 @@ export default function SavedJobsPage() {
                               width: 72, height: 72, borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc',
                               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 8
                           }}>
-                              {
-                                   return (
-                                       <img
-                                           alt={it.companyName}
-                                           src={getCompanyLogoUrl(it.companyLogo)}
-                                           style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                       />
-                                   );
-                              }
+                              <img
+                                   alt={it.companyName}
+                                   src={getCompanyLogoUrl(it.companyLogo)}
+                                   style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                               />
                           </div>
 
                           {/* Content info */}
